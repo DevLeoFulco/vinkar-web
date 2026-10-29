@@ -15,12 +15,13 @@ src/
     router.tsx     Rotas públicas e composição dos layouts
   features/
     landing/
-      components/  Cabeçalho, marca e rodapé
+      components/  Cabeçalho e rodapé
       sections/    Hero, história, soluções, segmentos, valores e contato
     demo/           Páginas, dados locais, estilos e testes da demonstração
   shared/
+    components/ui/  Marca, botões, badges e cards reutilizáveis
     config/         Rotas e âncoras centralizadas
-    styles/         Tokens de design globais
+    styles/         Tokens, estilos globais e componentes compartilhados
   test/             Setup de Vitest e Testing Library
 ```
 
@@ -34,7 +35,11 @@ O formulário de contato usa validação do navegador, não envia dados e não s
 
 ## Estilos e acessibilidade
 
-`src/shared/styles/tokens.css` centraliza as decisões globais de tipografia, cores, espaçamento, bordas e sombras. Os estilos da landing usam o escopo `.site`; o CSS original da demonstração permanece separado em `src/features/demo/demo.css` para reduzir regressões visuais.
+`src/shared/styles/tokens.css` centraliza tipografia, cores, espaçamento, bordas e sombras. `src/shared/styles/components.css` contém os estilos dos componentes UI compartilhados. A marca SVG é compartilhada por landing e demo sem alterar sua aparência aprovada na landing.
+
+Os estilos institucionais permanecem sob `.site`. Todos os seletores de apresentação da demonstração, incluindo suas media queries, ficam sob `.demo-app`; resets, estilos de `body`, controles e fontes são definidos globalmente uma única vez.
+
+Botões, badges e cards compartilhados são usados nos fluxos de campanha, benefícios, métricas e carteira. A navegação do demo informa seu estado expandido, permite fechar com Escape e mantém a sidebar navegável em telas pequenas. O modal de campanhas associa rótulos e descrição, move o foco ao abrir, contém a navegação por Tab, fecha com Escape e devolve o foco ao controle de origem.
 
 O cabeçalho institucional é sticky, o menu mobile expõe estado acessível, links usam âncoras internas e a rolagem respeita `prefers-reduced-motion`. Imagens secundárias usam lazy loading; a imagem principal recebe prioridade de carregamento.
 

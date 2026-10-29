@@ -12,7 +12,10 @@ import {
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { routes } from '../../shared/config/routes';
-import { demoCampaigns } from './demoData';
+import { Badge } from '../../shared/components/ui/Badge';
+import { Button } from '../../shared/components/ui/Button';
+import { Card } from '../../shared/components/ui/Card';
+import { demoCampaigns, type CampaignStatus } from './demoData';
 
 const consumerNavigation = [
   [routes.demoConsumer, 'Visão geral', LayoutDashboard],
@@ -39,17 +42,19 @@ export function DemoShell({ business, children, title, subtitle }: DemoShellProp
   return (
     <main className="app-layout">
       <aside className="sidebar">
-        <span className="side-title">{business ? 'ÁREA DA EMPRESA' : 'ÁREA DO CONSUMIDOR'}</span>
-        {links.map(([url, label, Icon]) => (
-          <NavLink
-            key={url}
-            to={url}
-            className={({ isActive }) => `side-link${isActive ? ' active' : ''}`}
-          >
-            <Icon size={19} aria-hidden="true" />
-            {label}
-          </NavLink>
-        ))}
+        <nav className="sidebar-nav" aria-label="Navegação da área">
+          <span className="side-title">{business ? 'ÁREA DA EMPRESA' : 'ÁREA DO CONSUMIDOR'}</span>
+          {links.map(([url, label, Icon]) => (
+            <NavLink
+              key={url}
+              to={url}
+              className={({ isActive }) => `side-link${isActive ? ' active' : ''}`}
+            >
+              <Icon size={19} aria-hidden="true" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
         <div className="side-bottom">
           <span className="avatar">{business ? 'BH' : 'VC'}</span>
           <span>
@@ -85,28 +90,38 @@ function Metric({
   icon: ReactNode;
 }) {
   return (
-    <div className="metric">
+    <Card as="article" className="metric">
       <div className="metric-top">
         <span>{label}</span>
         {icon}
       </div>
       <strong>{value}</strong>
       <small>{note}</small>
-    </div>
+    </Card>
   );
+}
+
+function getStatusVariant(status: CampaignStatus): 'success' | 'neutral' | 'warning' {
+  if (status === 'Ativa') {
+    return 'success';
+  }
+  if (status === 'Encerrada') {
+    return 'warning';
+  }
+  return 'neutral';
 }
 
 function BenefitsGrid({ compact = false }: { compact?: boolean }) {
   return (
     <div className="cards two">
       {demoCampaigns.slice(0, compact ? 2 : 4).map((campaign, index) => (
-        <article className="benefit" key={campaign.id}>
+        <Card as="article" className="benefit" key={campaign.id}>
           <div className={`benefit-cover cover${index}`}>
             <span aria-hidden="true">{['✂️', '🏋️', '🛒', '🌐'][index]}</span>
             <small>{campaign.segment}</small>
           </div>
           <div className="benefit-body">
-            <span className="tag">{campaign.status}</span>
+            <Badge variant={getStatusVariant(campaign.status)}>{campaign.status}</Badge>
             <h3>{campaign.title}</h3>
             <p>{campaign.description}</p>
             <div className="benefit-foot">
@@ -114,7 +129,7 @@ function BenefitsGrid({ compact = false }: { compact?: boolean }) {
               <span>Ver detalhes →</span>
             </div>
           </div>
-        </article>
+        </Card>
       ))}
     </div>
   );
@@ -188,7 +203,7 @@ export function WalletPage() {
         </h2>
         <p>Estes pontos são fictícios e não podem ser utilizados.</p>
       </div>
-      <div className="panel">
+      <Card className="panel">
         <h2>Extrato de exemplo</h2>
         {statements.map(([amount, description, note]) => (
           <div className="statement" key={description}>
@@ -199,7 +214,7 @@ export function WalletPage() {
             <b className={amount.startsWith('+') ? 'positive' : ''}>{amount}</b>
           </div>
         ))}
-      </div>
+      </Card>
     </DemoShell>
   );
 }
@@ -235,7 +250,7 @@ export function BusinessPage() {
         <h2>Gerencie seu negócio</h2>
       </div>
       <div className="cards two">
-        <NavLink className="actiontile" to={routes.demoCampaigns}>
+        <NavLink className="ui-card ui-card--interactive actiontile" to={routes.demoCampaigns}>
           <div className="tile-icon purple">
             <Megaphone aria-hidden="true" />
           </div>
@@ -243,7 +258,7 @@ export function BusinessPage() {
           <p>Crie, edite e organize suas campanhas diretamente na plataforma.</p>
           <span>Gerenciar campanhas →</span>
         </NavLink>
-        <NavLink className="actiontile" to={routes.demoPartners}>
+        <NavLink className="ui-card ui-card--interactive actiontile" to={routes.demoPartners}>
           <div className="tile-icon cyan">
             <Network aria-hidden="true" />
           </div>
@@ -270,21 +285,21 @@ export function PartnersPage() {
       title="Rede de parcerias"
       subtitle="Conecte seu negócio a novas oportunidades."
     >
-      <div className="panel">
+      <Card className="panel">
         <h2>Empresas da rede demonstrativa</h2>
         <div className="partner-grid">
           {partners.map(([emoji, name, segment]) => (
-            <div className="partner" key={name}>
+            <Card as="article" className="partner" key={name}>
               <div className="partner-icon" aria-hidden="true">
                 {emoji}
               </div>
               <strong>{name}</strong>
               <small>{segment}</small>
-              <span className="tag">Exemplo fictício</span>
-            </div>
+              <Badge>Exemplo fictício</Badge>
+            </Card>
           ))}
         </div>
-      </div>
+      </Card>
       <div className="notice partner-notice" role="note">
         Convites, compartilhamento de dados e criação de redes serão implementados após aprovação
         das regras de negócio e permissões.
@@ -309,35 +324,47 @@ export function SignInPage({ mode }: { mode: 'login' | 'cadastro' }) {
         </div>
         <h1>{mode === 'login' ? 'Bem-vindo de volta' : 'Comece sua jornada'}</h1>
         <p>Escolha como deseja conhecer a Vinkar.</p>
-        <div className="choice" aria-label="Perfil da demonstração">
-          <button
+        <div className="choice" role="group" aria-label="Perfil da demonstração">
+          <Button
             type="button"
             className={profile === 'consumidor' ? 'selected' : ''}
             aria-pressed={profile === 'consumidor'}
             onClick={() => setProfile('consumidor')}
+            variant="secondary"
           >
             Sou consumidor
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             className={profile === 'empresa' ? 'selected' : ''}
             aria-pressed={profile === 'empresa'}
             onClick={() => setProfile('empresa')}
+            variant="secondary"
           >
             Sou empresa
-          </button>
+          </Button>
         </div>
-        <label>
+        <label htmlFor={`signin-email-${mode}`}>
           Seu e-mail
-          <input type="email" placeholder="voce@exemplo.com" autoComplete="off" />
+          <input
+            id={`signin-email-${mode}`}
+            type="email"
+            placeholder="voce@exemplo.com"
+            autoComplete="off"
+          />
         </label>
-        <label>
+        <label htmlFor={`signin-password-${mode}`}>
           Senha
-          <input type="password" placeholder="••••••••" autoComplete="off" />
+          <input
+            id={`signin-password-${mode}`}
+            type="password"
+            placeholder="••••••••"
+            autoComplete="off"
+          />
         </label>
-        <button className="btn primary full" type="button" onClick={continueToDemo}>
+        <Button className="full" type="button" onClick={continueToDemo}>
           Entrar na demonstração <ArrowRight size={17} aria-hidden="true" />
-        </button>
+        </Button>
         <p className="smallprint">
           A navegação é simulada: não criamos contas nem autenticamos usuários.
         </p>
@@ -357,7 +384,7 @@ export function DemoNotFoundPage() {
       <span className="kicker">DEMONSTRAÇÃO</span>
       <h1>Página não encontrada</h1>
       <p>Este caminho não faz parte da demonstração atual.</p>
-      <NavLink className="btn primary" to={routes.demoBenefits}>
+      <NavLink className="ui-button ui-button--primary" to={routes.demoBenefits}>
         Explorar benefícios
       </NavLink>
     </main>
@@ -370,7 +397,7 @@ export function NotFoundPage() {
       <span className="kicker">404</span>
       <h1>Esta página não existe</h1>
       <p>Volte ao início para conhecer a Vinkar.</p>
-      <NavLink className="btn primary" to={routes.home}>
+      <NavLink className="ui-button ui-button--primary" to={routes.home}>
         Voltar ao início
       </NavLink>
     </main>
