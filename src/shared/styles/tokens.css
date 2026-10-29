@@ -1,0 +1,130 @@
+:root {
+  font-family: 'DM Sans', sans-serif;
+  color: #172044;
+  background: #fff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --color-navy-950: #07142f;
+  --color-navy-900: #102044;
+  --color-navy-700: #233965;
+  --color-purple-700: #4936cf;
+  --color-purple-600: #5b4be5;
+  --color-purple-100: #eeedff;
+  --color-blue-700: #176fbb;
+  --color-blue-100: #e6f4ff;
+  --color-cyan-600: #00aeb0;
+  --color-cyan-700: #078486;
+  --color-cyan-100: #e2f8f6;
+  --color-orange-700: #b85018;
+  --color-orange-100: #fff0e6;
+  --color-coral-700: #b84942;
+  --color-coral-100: #ffedeb;
+  --color-text: #172044;
+  --color-muted: #56617d;
+  --color-surface: #fff;
+  --color-surface-soft: #f5f7fc;
+  --color-border: #e5e9f2;
+  --color-overlay: rgb(5 18 43 / 69%);
+  --color-glass: rgb(255 255 255 / 90%);
+  --color-navy-scrim-12: rgb(5 18 43 / 12%);
+  --color-navy-scrim-18: rgb(5 18 43 / 18%);
+  --color-navy-scrim-25: rgb(5 18 43 / 25%);
+  --color-navy-scrim-32: rgb(5 18 43 / 32%);
+  --color-navy-scrim-55: rgb(5 18 43 / 55%);
+  --color-navy-scrim-72: rgb(5 18 43 / 72%);
+  --color-navy-900-68: rgb(16 32 68 / 68%);
+  --color-navy-900-92: rgb(16 32 68 / 92%);
+  --color-navy-950-96: rgb(7 20 47 / 96%);
+  --color-white-08: rgb(255 255 255 / 8%);
+  --color-white-24: rgb(255 255 255 / 24%);
+  --color-white-28: rgb(255 255 255 / 28%);
+  --color-white-36: rgb(255 255 255 / 36%);
+  --color-white-82: rgb(255 255 255 / 82%);
+  --color-white-84: rgb(255 255 255 / 84%);
+  --color-white-92: rgb(255 255 255 / 92%);
+  --color-purple-84: rgb(73 54 207 / 84%);
+  --color-purple-95: rgb(91 75 229 / 95%);
+  --color-purple-shadow: rgb(73 54 207 / 20%);
+  --color-cyan-38: rgb(0 174 176 / 38%);
+  --color-cyan-96: rgb(0 174 176 / 96%);
+  --color-cyan-dark-88: rgb(7 132 134 / 88%);
+  --color-card-shadow: rgb(22 37 81 / 6%);
+  --color-hero-aqua: #48e1d8;
+  --color-hero-lavender: #c8c0ff;
+  --color-hero-focus: #42ded5;
+  --shadow-card: 0 14px 40px rgb(22 37 81 / 9%);
+  --shadow-header: 0 5px 24px rgb(15 31 66 / 8%);
+  --radius-card: 20px;
+  --radius-control: 12px;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-size-body: 1rem;
+  --font-size-small: 0.875rem;
+  --font-size-eyebrow: 0.75rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-section: clamp(4rem, 8vw, 7rem);
+  --content-width: 1160px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+}
+
+body,
+button,
+input,
+textarea {
+  font-family: 'DM Sans', sans-serif;
+}
+
+button,
+a,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid #00aeb0;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
