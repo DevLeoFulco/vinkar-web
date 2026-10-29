@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './shared/styles/tokens.css';
+import './shared/styles/components.css';
 import { AppRouter } from './app/router';
 
 const rootElement = document.getElementById('root');

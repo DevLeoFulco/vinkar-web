@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { ArrowRight, CircleHelp, Menu } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, CircleHelp, Menu, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { landingSections, routes } from '../../shared/config/routes';
+import { BrandMark } from '../../shared/components/ui/BrandMark';
 
 export function DemoBrand() {
   return (
@@ -10,9 +11,7 @@ export function DemoBrand() {
       to={`${routes.home}#${landingSections.home}`}
       aria-label="Vinkar — voltar ao início da Vinkar"
     >
-      <span className="brandmark" aria-hidden="true">
-        V<span>•</span>
-      </span>
+      <BrandMark />
       <span>
         Vinkar
         <small>CONEXÕES QUE GERAM MAIS</small>
@@ -23,6 +22,17 @@ export function DemoBrand() {
 
 export function DemoHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -40,7 +50,7 @@ export function DemoHeader() {
           aria-expanded={menuOpen}
           aria-controls="demo-navigation"
         >
-          <Menu size={21} aria-hidden="true" />
+          {menuOpen ? <X size={21} aria-hidden="true" /> : <Menu size={21} aria-hidden="true" />}
         </button>
         <nav
           className={menuOpen ? 'open' : ''}
@@ -56,7 +66,11 @@ export function DemoHeader() {
           <NavLink to={routes.demoBusiness} onClick={closeMenu}>
             Sou empresa
           </NavLink>
-          <NavLink className="navbutton" to={routes.demoLogin} onClick={closeMenu}>
+          <NavLink
+            className="navbutton ui-button ui-button--primary"
+            to={routes.demoLogin}
+            onClick={closeMenu}
+          >
             Entrar <ArrowRight size={16} aria-hidden="true" />
           </NavLink>
         </nav>

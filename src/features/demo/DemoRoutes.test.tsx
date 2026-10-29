@@ -21,6 +21,7 @@ describe('isolamento e navegação da demonstração', () => {
   it('mantém a landing institucional fora da demonstração', () => {
     renderRoute('/');
 
+    expect(document.querySelector('.demo-app')).not.toBeInTheDocument();
     expect(
       screen.getByRole('heading', {
         name: 'Todos os seus custos podem se transformar em benefícios.',
@@ -111,6 +112,9 @@ describe('isolamento e navegação da demonstração', () => {
   it('mantém a rota de campanhas dentro do layout e dos dados demonstrativos', () => {
     renderRoute('/demo/campanhas');
 
+    expect(document.querySelector('.demo-app')).toContainElement(
+      screen.getByRole('heading', { name: 'Minhas campanhas' }),
+    );
     expect(screen.getByRole('heading', { name: 'Minhas campanhas' })).toBeInTheDocument();
     expect(screen.getByText(/Modo demonstração/)).toBeInTheDocument();
     expect(screen.getByText('4 campanhas demonstrativas')).toBeInTheDocument();
@@ -139,6 +143,68 @@ describe('isolamento e navegação da demonstração', () => {
     await user.click(screen.getByRole('button', { name: 'Excluir Campanha de teste' }));
     expect(screen.getByText('4 campanhas demonstrativas')).toBeInTheDocument();
     expect(screen.queryByText('Campanha de teste')).not.toBeInTheDocument();
+  });
+
+  it('permite editar campanhas sem alterar a quantidade de registros', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/campanhas');
+
+    await user.click(screen.getByRole('button', { name: 'Editar Sua próxima visita vale mais' }));
+    const dialog = screen.getByRole('dialog', { name: 'Editar campanha' });
+    const nameInput = within(dialog).getByLabelText('Nome da campanha');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Campanha revisada');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar campanha' }));
+
+    expect(screen.getByText('4 campanhas demonstrativas')).toBeInTheDocument();
+    expect(screen.getByText('Campanha revisada')).toBeInTheDocument();
+    expect(screen.queryByText('Sua próxima visita vale mais')).not.toBeInTheDocument();
+  });
+
+  it('mantém foco dentro do modal e o devolve ao controle que o abriu', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/campanhas');
+
+    const openButton = screen.getByRole('button', { name: 'Nova campanha' });
+    await user.click(openButton);
+    const dialog = screen.getByRole('dialog', { name: 'Nova campanha' });
+    const nameInput = within(dialog).getByLabelText('Nome da campanha');
+    expect(document.activeElement).toBe(nameInput);
+
+    openButton.focus();
+    await user.keyboard('{Tab}');
+    expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Fechar' }));
+
+    within(dialog).getByRole('button', { name: 'Fechar' }).focus();
+    await user.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(openButton);
+  });
+
+  it('abre e fecha a navegação mobile do demo e navega pelo perfil selecionado', async () => {
+    const user = userEvent.setup();
+    const { container } = renderRoute('/demo/beneficios');
+    const menuButton = container.querySelector<HTMLButtonElement>('.mobile-menu');
+    expect(menuButton).not.toBeNull();
+    if (!menuButton) {
+      throw new Error('Botão do menu mobile não encontrado.');
+    }
+
+    expect(menuButton).toHaveAttribute('aria-label', 'Abrir menu da demonstração');
+    await user.click(menuButton);
+    expect(menuButton).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(
+      within(screen.getByRole('navigation', { name: 'Navegação da demonstração' })).getByRole(
+        'link',
+        { name: 'Sou empresa' },
+      ),
+    );
+    expect(screen.getByRole('heading', { name: 'Visão geral da empresa' })).toBeInTheDocument();
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('apresenta uma página 404 fora das rotas conhecidas', () => {

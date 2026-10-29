@@ -1,7 +1,7 @@
 :root {
-  font-family: 'DM Sans', sans-serif;
-  color: #172044;
-  background: #fff;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-surface);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --color-navy-950: #07142f;
@@ -88,8 +88,9 @@ body {
 body,
 button,
 input,
-textarea {
-  font-family: 'DM Sans', sans-serif;
+textarea,
+select {
+  font-family: var(--font-body);
 }
 
 button,
@@ -114,7 +115,7 @@ img {
 }
 
 :focus-visible {
-  outline: 3px solid #00aeb0;
+  outline: 3px solid var(--color-cyan-600);
   outline-offset: 3px;
 }
 

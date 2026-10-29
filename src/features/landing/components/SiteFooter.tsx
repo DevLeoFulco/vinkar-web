@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { landingSections, routes } from '../../../shared/config/routes';
-import { BrandMark } from './BrandMark';
+import { BrandMark } from '../../../shared/components/ui/BrandMark';
 
 const footerNavigation = [
   [landingSections.about, 'Sobre'],
