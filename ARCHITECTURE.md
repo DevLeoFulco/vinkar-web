@@ -31,6 +31,8 @@ As ilustrações são servidas diretamente de `public/images/`, agrupadas por fi
 
 Os registros de campanha e parceiros da demo continuam fictícios e ficam em `src/features/demo/demoData.ts`. O estado do CRUD permanece local ao componente, sem persistência. A landing usa textos de validação e cartões de segmento sem nomes comerciais ou marcas.
 
+O catálogo compartilhado de estabelecimentos demonstrativos fica em `src/features/demo/mocks/companyNetwork.ts`. `OrganizationConnection` identifica uma conexão direta entre duas organizações; a consulta não infere conexões transitivas nem associa conexões a identidades pessoais. As listas de descoberta do Consumidor e de parcerias da Empresa reutilizam o mesmo catálogo. Os dados são fictícios e conexões não implicam elegibilidade ou parceria comercial real.
+
 O formulário de contato usa validação do navegador, não envia dados e não simula entrega. Endereço de e-mail, telefone, localização e redes sociais oficiais aguardam confirmação. Termos e política só devem ganhar links quando suas páginas forem publicadas.
 
 ## Domínio demonstrativo de perfis e planos

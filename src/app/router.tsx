@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { DemoLayout } from './layouts/DemoLayout';
 import { CampaignsPage } from '../features/demo/CampaignsPage';
+import { CompaniesPage } from '../features/demo/CompaniesPage';
 import { DemoBeneficiaryPage } from '../features/demo/DemoBeneficiaryPage';
 import { DemoContextGate } from '../features/demo/DemoContextGate';
 import { DemoPlansPage } from '../features/demo/DemoPlansPage';
@@ -30,6 +31,14 @@ export function AppRoutes() {
           element={
             <DemoContextGate context="CONSUMER">
               <ConsumerPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="empresas"
+          element={
+            <DemoContextGate context="CONSUMER">
+              <CompaniesPage />
             </DemoContextGate>
           }
         />

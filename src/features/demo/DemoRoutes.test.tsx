@@ -117,6 +117,149 @@ describe('isolamento e navegação da demonstração', () => {
     expect(screen.getByText('Explore o conceito de benefícios corporativos.')).toBeInTheDocument();
   });
 
+  it('lista empresas e preserva o cenário do Consumidor no catálogo', () => {
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    expect(screen.getByRole('heading', { name: 'Empresas e conexões' })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Empresas demonstrativas' })).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.getAllByRole('article')).toHaveLength(4);
+    const companySegments = Array.from(
+      screen
+        .getByRole('list', { name: 'Empresas demonstrativas' })
+        .querySelectorAll('.company-catalog-segment'),
+      (segment) => segment.textContent,
+    );
+    expect(companySegments).toEqual(['Barbearia', 'Supermercado', 'Academia', 'Internet']);
+    expect(screen.getByText('2 conexões diretas')).toBeInTheDocument();
+    expect(screen.getAllByText('1 conexão direta')).toHaveLength(2);
+    expect(screen.getByText('0 conexões diretas')).toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+    expect(screen.getByRole('link', { name: 'Empresas' })).toHaveAttribute(
+      'href',
+      '/demo/empresas',
+    );
+    expect(
+      screen.queryByRole('button', { name: /aderir|selecionar.*empresa principal/i }),
+    ).toBeNull();
+  });
+
+  it('expõe apenas conexões diretas da empresa consultada', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    const academyCard = screen
+      .getByRole('heading', { name: 'Academia Horizonte Demo' })
+      .closest('article');
+    expect(academyCard).not.toBeNull();
+    const academy = within(academyCard as HTMLElement);
+    const viewConnections = academy.getByRole('button', {
+      name: 'Ver empresas conectadas a Academia Horizonte Demo',
+    });
+    expect(viewConnections).toHaveAttribute('aria-expanded', 'false');
+    expect(viewConnections).toHaveAttribute(
+      'aria-controls',
+      'connections-organization-demo-network-academy',
+    );
+    const connectionList = document.getElementById(
+      viewConnections.getAttribute('aria-controls') ?? '',
+    );
+    expect(connectionList).not.toBeNull();
+    expect(connectionList).not.toBeVisible();
+    viewConnections.focus();
+    await user.keyboard('{Enter}');
+
+    expect(viewConnections).toHaveAttribute('aria-expanded', 'true');
+    expect(connectionList).toBeVisible();
+    expect(academy.getByText('Barbearia Ponto Zero Demo')).toBeInTheDocument();
+    expect(academy.getByText('Mercado Raiz Demo')).toBeInTheDocument();
+
+    const barbershopCard = screen
+      .getByRole('heading', { name: 'Barbearia Ponto Zero Demo' })
+      .closest('article');
+    expect(barbershopCard).not.toBeNull();
+    await user.click(
+      within(barbershopCard as HTMLElement).getByRole('button', {
+        name: 'Ver empresas conectadas a Barbearia Ponto Zero Demo',
+      }),
+    );
+
+    expect(
+      within(barbershopCard as HTMLElement).getByText('Academia Horizonte Demo'),
+    ).toBeInTheDocument();
+    expect(
+      within(barbershopCard as HTMLElement).queryByText('Mercado Raiz Demo'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('informa quando uma empresa não possui conexões diretas', () => {
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    const internetProviderCard = screen
+      .getByRole('heading', { name: 'Provedor Nuvem Azul Demo' })
+      .closest('article');
+    expect(internetProviderCard).not.toBeNull();
+    expect(
+      within(internetProviderCard as HTMLElement).getByText(
+        'Nenhuma conexão direta cadastrada neste cenário.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(internetProviderCard as HTMLElement).queryByRole('button'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('protege o catálogo contra acesso direto sem o contexto Consumidor', () => {
+    renderRoute('/demo/empresas');
+
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('Consumidor')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Empresas e conexões' })).not.toBeInTheDocument();
+  });
+
+  it('não permite reutilizar o catálogo com um contexto incompatível', () => {
+    renderRoute('/demo/empresas', { demoContext: 'BUSINESS' });
+
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('Consumidor')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Empresas e conexões' })).not.toBeInTheDocument();
+  });
+
+  it('mantém a lista de empresas da tela empresarial ligada ao catálogo compartilhado', () => {
+    renderRoute('/demo/parcerias', { demoContext: 'BUSINESS' });
+
+    expect(screen.getByRole('heading', { name: 'Rede de parcerias' })).toBeInTheDocument();
+    expect(screen.getAllByRole('article')).toHaveLength(4);
+    for (const name of [
+      'Barbearia Ponto Zero Demo',
+      'Mercado Raiz Demo',
+      'Academia Horizonte Demo',
+      'Provedor Nuvem Azul Demo',
+    ]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
+  it('mantém a sessão demonstrativa ao retornar do catálogo à visão geral', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    await user.click(screen.getByRole('link', { name: 'Voltar à visão geral' }));
+
+    expect(
+      screen.getByRole('heading', { name: 'Olá, que bom ter você aqui!' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+  });
+
   it('apresenta os planos de Consumidor com regras e restrições demonstrativas', () => {
     renderRoute('/demo/planos?context=CONSUMER');
 

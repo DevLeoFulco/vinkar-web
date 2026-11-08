@@ -2,6 +2,8 @@ export type PersonIdentityId = `person-demo-${string}`;
 
 export type OrganizationId = `organization-demo-${string}`;
 
+export type OrganizationConnectionId = `organization-connection-demo-${string}`;
+
 export type PersonalProfileType = 'CONSUMER' | 'BENEFICIARY';
 
 export type OrganizationRole = 'ADMINISTRATOR';
@@ -16,6 +18,11 @@ export type PersonIdentity = Readonly<{
 export type Organization = Readonly<{
   id: OrganizationId;
   displayName: string;
+}>;
+
+export type OrganizationConnection = Readonly<{
+  id: OrganizationConnectionId;
+  organizationIds: readonly [OrganizationId, OrganizationId];
 }>;
 
 export type OrganizationAdministration = Readonly<{

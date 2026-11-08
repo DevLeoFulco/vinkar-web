@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import {
+  Building2,
   ArrowRight,
   Coins,
   Gift,
@@ -15,10 +16,12 @@ import { Badge } from '../../shared/components/ui/Badge';
 import { Button } from '../../shared/components/ui/Button';
 import { Card } from '../../shared/components/ui/Card';
 import { demoCampaigns, type CampaignStatus } from './demoData';
+import { getDemoCompanies } from './mocks/companyNetwork';
 import type { DemoScenarioContext } from './mocks/demoScenarios';
 
 const consumerNavigation = [
   [routes.demoConsumer, 'Visão geral', LayoutDashboard],
+  [routes.demoCompanies, 'Empresas', Building2],
   [routes.demoBenefits, 'Benefícios', Gift],
   [routes.demoWallet, 'Minha carteira', Wallet],
 ] as const;
@@ -286,13 +289,6 @@ export function BusinessPage() {
 }
 
 export function PartnersPage() {
-  const partners = [
-    ['✂️', 'Barbearia do Matuto', 'Barbearia'],
-    ['🛒', 'Varejão Econômico', 'Supermercado'],
-    ['🏋️', 'Academia Hangar Fit', 'Academia'],
-    ['🌐', 'Powertec', 'Internet'],
-  ];
-
   return (
     <DemoShell
       business
@@ -302,13 +298,13 @@ export function PartnersPage() {
       <Card className="panel">
         <h2>Empresas da rede demonstrativa</h2>
         <div className="partner-grid">
-          {partners.map(([emoji, name, segment]) => (
-            <Card as="article" className="partner" key={name}>
+          {getDemoCompanies().map((company) => (
+            <Card as="article" className="partner" key={company.id}>
               <div className="partner-icon" aria-hidden="true">
-                {emoji}
+                {company.symbol}
               </div>
-              <strong>{name}</strong>
-              <small>{segment}</small>
+              <strong>{company.displayName}</strong>
+              <small>{company.segmentLabel}</small>
               <Badge>Exemplo fictício</Badge>
             </Card>
           ))}
