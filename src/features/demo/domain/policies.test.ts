@@ -27,6 +27,7 @@ describe('modelos do domínio demonstrativo', () => {
         personIdentity,
         activePersonalProfile,
         organizationAdministrations: [],
+        organizationAffiliations: [],
         subscriptionPlan: null,
       };
     }
@@ -49,6 +50,7 @@ describe('modelos do domínio demonstrativo', () => {
           role: 'ADMINISTRATOR',
         },
       ],
+      organizationAffiliations: [],
       subscriptionPlan: 'FREE',
     };
 

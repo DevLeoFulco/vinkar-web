@@ -23,6 +23,13 @@ export type OrganizationAdministration = Readonly<{
   role: OrganizationRole;
 }>;
 
+export type OrganizationAffiliationType = 'EMPLOYMENT';
+
+export type OrganizationAffiliation = Readonly<{
+  organizationId: OrganizationId;
+  type: OrganizationAffiliationType;
+}>;
+
 export type PlanPolicy = Readonly<{
   pointsValidityDays: number | null;
   mainNetworkExitGracePeriodDays: number;
@@ -32,5 +39,6 @@ export type DemoSession = Readonly<{
   personIdentity: PersonIdentity;
   activePersonalProfile: PersonalProfileType | null;
   organizationAdministrations: readonly OrganizationAdministration[];
+  organizationAffiliations: readonly OrganizationAffiliation[];
   subscriptionPlan: SubscriptionPlan | null;
 }>;

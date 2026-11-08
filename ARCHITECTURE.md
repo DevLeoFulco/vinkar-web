@@ -41,6 +41,8 @@ As políticas puras ficam em `src/features/demo/domain/policies.ts` e se aplicam
 
 Essas durações são premissas técnicas temporárias para a demonstração, sujeitas à homologação dos sócios. Não há nesta etapa regras de planos para Empresa ou Beneficiário, nem políticas de upgrade ou downgrade.
 
+O catálogo determinístico dos cenários demonstrativos fica em `src/features/demo/mocks/demoScenarios.ts`, separado dos mocks de campanhas. Ele define uma sessão de Consumidor com plano FREE, uma Empresa com identidade de administrador separada da organização e um Beneficiário com perfil pessoal próprio. `OrganizationAffiliation` representa somente o vínculo demonstrativo com uma organização; não implica elegibilidade, benefícios, pontos ou regras comerciais. Não há perfil pessoal `COMPANY`, nem plano empresarial definido.
+
 ## Estilos e acessibilidade
 
 `src/shared/styles/tokens.css` centraliza tipografia, cores, espaçamento, bordas e sombras. `src/shared/styles/components.css` contém os estilos dos componentes UI compartilhados. A marca SVG é compartilhada por landing e demo sem alterar sua aparência aprovada na landing.
