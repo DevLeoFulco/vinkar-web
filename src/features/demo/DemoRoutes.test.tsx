@@ -117,6 +117,107 @@ describe('isolamento e navegação da demonstração', () => {
     expect(screen.getByText('Explore o conceito de benefícios corporativos.')).toBeInTheDocument();
   });
 
+  it('apresenta os planos de Consumidor com regras e restrições demonstrativas', () => {
+    renderRoute('/demo/planos?context=CONSUMER');
+
+    expect(screen.getByRole('heading', { name: 'Planos Vinkar' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Gratuito' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Pro' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Premium' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Pontos válidos por 90 dias corridos após o crédito.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Carência de 30 dias corridos após a ativação.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Pontos válidos por 180 dias corridos após o crédito.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Carência de 15 dias corridos após a ativação.')).toBeInTheDocument();
+    expect(screen.getByText('Pontos sem expiração.')).toBeInTheDocument();
+    expect(screen.getByText('Saída imediata da rede principal.')).toBeInTheDocument();
+    expect(screen.getByText('Os pontos não podem ser sacados.')).toBeInTheDocument();
+    expect(screen.getByText('Os pontos não podem ser transferidos.')).toBeInTheDocument();
+    expect(screen.getByText('Os pontos não podem ser usados fora da Vinkar.')).toBeInTheDocument();
+    expect(
+      screen.getByText('A disponibilidade de benefícios depende das regras de elegibilidade.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/R\$\s?\d|contratar|assinar/i)).not.toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+  });
+
+  it.each([
+    ['BUSINESS', 'Empresa', '/demo/empresa', 'Voltar à demonstração de Empresa'],
+    ['BENEFICIARY', 'Beneficiário', '/demo/beneficiario', 'Voltar à apresentação de Beneficiário'],
+  ] as const)(
+    'não aplica políticas de Consumidor ao contexto %s e permite retornar',
+    async (context, contextName, returnPath, returnLabel) => {
+      const user = userEvent.setup();
+      renderRoute(`/demo/planos?context=${context}`);
+
+      expect(
+        within(screen.getByRole('main')).getByText(contextName, { exact: true }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/detalhes comerciais.*ainda estão em definição/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/políticas apresentadas para Consumidor não se aplicam automaticamente/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Gratuito' })).not.toBeInTheDocument();
+      expect(screen.queryByText(/pontos válidos por|carência de/i)).not.toBeInTheDocument();
+      expect(
+        screen.getByText('Nenhum plano pode ser contratado ou ativado nesta demonstração.'),
+      ).toBeInTheDocument();
+
+      const returnLink = screen.getByRole('link', { name: returnLabel });
+      expect(returnLink).toHaveAttribute('href', returnPath);
+      await user.click(returnLink);
+
+      expect(document.querySelector('.demo-app')).toHaveAttribute(
+        'data-demo-scenario-id',
+        context === 'BUSINESS' ? 'scenario-demo-business-admin' : 'scenario-demo-beneficiary',
+      );
+      expect(
+        screen.getByRole('heading', {
+          name: context === 'BUSINESS' ? 'Visão geral da empresa' : 'Beneficiário',
+        }),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it('retorna à seleção quando os planos são acessados sem contexto', () => {
+    renderRoute('/demo/planos');
+
+    expect(
+      screen.getByRole('heading', { name: 'Uma Vinkar, diferentes experiências' }),
+    ).toBeInTheDocument();
+  });
+
+  it('preserva o cenário ativo ao consultar e retornar dos planos', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/consumidor', { demoContext: 'CONSUMER' });
+
+    await user.click(screen.getByRole('link', { name: 'Planos' }));
+
+    expect(screen.getByRole('heading', { name: 'Planos Vinkar' })).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+
+    await user.click(screen.getByRole('link', { name: 'Voltar à demonstração de Consumidor' }));
+
+    expect(
+      screen.getByRole('heading', { name: 'Olá, que bom ter você aqui!' }),
+    ).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+  });
+
   it('seleciona Consumidor e abre a experiência existente com o cenário ativo', async () => {
     const user = userEvent.setup();
     renderRoute('/demo');

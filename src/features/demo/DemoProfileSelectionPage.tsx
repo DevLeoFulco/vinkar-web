@@ -13,6 +13,7 @@ type ProfileOption = Readonly<{
   context: DemoScenarioContext;
   description: string;
   destination: string;
+  planDestination: string;
   Icon: LucideIcon;
 }>;
 
@@ -21,18 +22,21 @@ const profileOptions: readonly ProfileOption[] = [
     context: 'CONSUMER',
     description: 'Descubra empresas, conexões e benefícios.',
     destination: routes.demoLoginConsumer,
+    planDestination: routes.demoPlansConsumer,
     Icon: UserRound,
   },
   {
     context: 'BUSINESS',
     description: 'Conheça campanhas, redes e parcerias.',
     destination: routes.demoLoginBusiness,
+    planDestination: routes.demoPlansBusiness,
     Icon: Building2,
   },
   {
     context: 'BENEFICIARY',
     description: 'Explore o conceito de benefícios corporativos.',
     destination: routes.demoLoginBeneficiary,
+    planDestination: routes.demoPlansBeneficiary,
     Icon: BriefcaseBusiness,
   },
 ];
@@ -56,7 +60,7 @@ export function DemoProfileSelectionPage() {
       </header>
 
       <div className="demo-profile-grid">
-        {profileOptions.map(({ context, description, destination, Icon }) => {
+        {profileOptions.map(({ context, description, destination, planDestination, Icon }) => {
           const scenario = findScenario(context);
 
           return (
@@ -69,6 +73,9 @@ export function DemoProfileSelectionPage() {
               <Link className="ui-button ui-button--primary demo-profile-action" to={destination}>
                 Continuar como {scenario.title.toLowerCase()}
                 <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+              <Link className="demo-profile-plans-link" to={planDestination}>
+                Informações de planos
               </Link>
             </Card>
           );

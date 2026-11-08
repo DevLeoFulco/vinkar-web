@@ -5,6 +5,19 @@ import { getDemoScenario, type DemoScenario, type DemoScenarioId } from './mocks
 import { DemoScenarioContext } from './DemoScenarioState';
 
 function getScenarioForPath(pathname: string, search: string, state: unknown): DemoScenario | null {
+  if (pathname === routes.demoPlans) {
+    switch (new URLSearchParams(search).get('context')) {
+      case 'CONSUMER':
+        return getDemoScenario('scenario-demo-consumer-free') ?? null;
+      case 'BUSINESS':
+        return getDemoScenario('scenario-demo-business-admin') ?? null;
+      case 'BENEFICIARY':
+        return getDemoScenario('scenario-demo-beneficiary') ?? null;
+      default:
+        return null;
+    }
+  }
+
   if (pathname === routes.demoLogin || pathname === routes.demoSignUp) {
     const context = new URLSearchParams(search).get('context');
     switch (context) {

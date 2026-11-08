@@ -3,6 +3,7 @@ import { DemoLayout } from './layouts/DemoLayout';
 import { CampaignsPage } from '../features/demo/CampaignsPage';
 import { DemoBeneficiaryPage } from '../features/demo/DemoBeneficiaryPage';
 import { DemoContextGate } from '../features/demo/DemoContextGate';
+import { DemoPlansPage } from '../features/demo/DemoPlansPage';
 import { DemoProfileSelectionPage } from '../features/demo/DemoProfileSelectionPage';
 import {
   BenefitsPage,
@@ -23,6 +24,7 @@ export function AppRoutes() {
       <Route path={routes.home} element={<LandingPage />} />
       <Route path={routes.demo} element={<DemoLayout />}>
         <Route index element={<DemoProfileSelectionPage />} />
+        <Route path="planos" element={<DemoPlansPage />} />
         <Route
           path="consumidor"
           element={

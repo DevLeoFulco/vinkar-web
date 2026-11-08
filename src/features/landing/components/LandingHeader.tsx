@@ -8,6 +8,7 @@ const navigation = [
   [landingSections.home, 'Início'],
   [landingSections.about, 'Sobre'],
   [landingSections.solutions, 'Soluções'],
+  [landingSections.plans, 'Planos'],
   [landingSections.clients, 'Clientes'],
   [landingSections.values, 'Missão, Visão e Valores'],
   [landingSections.contact, 'Contato'],

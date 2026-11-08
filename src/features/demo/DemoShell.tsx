@@ -34,6 +34,12 @@ export function DemoHeader() {
         : activeScenario?.context === 'BENEFICIARY'
           ? routes.demoLoginBeneficiary
           : routes.demo;
+  const plansDestination =
+    activeScenario?.context === 'CONSUMER'
+      ? routes.demoPlansConsumer
+      : activeScenario?.context === 'BUSINESS'
+        ? routes.demoPlansBusiness
+        : routes.demoPlansBeneficiary;
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -82,6 +88,11 @@ export function DemoHeader() {
           <NavLink to={routes.demoLoginBusiness} onClick={closeMenu}>
             Sou empresa
           </NavLink>
+          {activeScenario && (
+            <NavLink to={plansDestination} onClick={closeMenu}>
+              Planos
+            </NavLink>
+          )}
           <NavLink
             className="navbutton ui-button ui-button--primary"
             to={entryDestination}

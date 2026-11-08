@@ -5,6 +5,7 @@ import { BrandMark } from '../../../shared/components/ui/BrandMark';
 const footerNavigation = [
   [landingSections.about, 'Sobre'],
   [landingSections.solutions, 'Soluções'],
+  [landingSections.plans, 'Planos'],
   [landingSections.clients, 'Clientes'],
   [landingSections.values, 'Missão, Visão e Valores'],
   [landingSections.contact, 'Contato'],

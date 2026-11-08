@@ -1,6 +1,10 @@
 export const routes = {
   home: '/',
   demo: '/demo',
+  demoPlans: '/demo/planos',
+  demoPlansConsumer: '/demo/planos?context=CONSUMER',
+  demoPlansBusiness: '/demo/planos?context=BUSINESS',
+  demoPlansBeneficiary: '/demo/planos?context=BENEFICIARY',
   demoConsumer: '/demo/consumidor',
   demoBusiness: '/demo/empresa',
   demoBeneficiary: '/demo/beneficiario',
@@ -19,6 +23,7 @@ export const landingSections = {
   home: 'inicio',
   about: 'sobre',
   solutions: 'solucoes',
+  plans: 'planos',
   clients: 'clientes',
   values: 'valores',
   contact: 'contato',
