@@ -9,7 +9,7 @@ const solutions = [
       'Uma proposta para reunir vantagens e apoiar a transformação de gastos em benefícios.',
     image: 'solucao-beneficios.webp',
     alt: 'Ilustração conceitual de uma interface de benefícios em um celular',
-    link: routes.demoBenefits,
+    link: routes.demoLoginConsumer,
     linkText: 'Para consumidores',
     tone: 'purple',
   },
@@ -18,7 +18,7 @@ const solutions = [
     description: 'Uma visão demonstrativa de campanhas pensadas para diferentes objetivos.',
     image: 'solucao-campanhas.webp',
     alt: 'Ilustração conceitual de gerenciamento de campanhas em um computador',
-    link: routes.demoCampaigns,
+    link: routes.demoLoginBusiness,
     linkText: 'Para empresas',
     tone: 'blue',
   },
@@ -27,7 +27,7 @@ const solutions = [
     description: 'Uma proposta para visualizar pontos e movimentações de forma clara.',
     image: 'solucao-carteira.webp',
     alt: 'Ilustração conceitual de carteira digital de benefícios',
-    link: routes.demoWallet,
+    link: routes.demoLoginConsumer,
     linkText: 'Saiba mais',
     tone: 'cyan',
   },
@@ -36,7 +36,7 @@ const solutions = [
     description: 'Uma visão de como empresas de diferentes segmentos podem se conectar.',
     image: 'solucao-parcerias.webp',
     alt: 'Imagem conceitual de uma parceria empresarial',
-    link: routes.demoPartners,
+    link: routes.demoLoginBusiness,
     linkText: 'Saiba mais',
     tone: 'orange',
   },
@@ -45,7 +45,7 @@ const solutions = [
     description: 'Uma proposta de gestão para apoiar a organização de campanhas e benefícios.',
     image: 'solucao-gestao.webp',
     alt: 'Ilustração conceitual de uma interface de gestão empresarial',
-    link: routes.demoBusiness,
+    link: routes.demoLoginBusiness,
     linkText: 'Saiba mais',
     tone: 'purple',
   },
@@ -61,7 +61,7 @@ export function SolutionsSection() {
             <h2>Uma plataforma pensada para todos os lados da rede</h2>
             <p>Conheça as frentes que estamos construindo para conectar e gerar oportunidades.</p>
           </div>
-          <Link className="site-button site-button-soft" to={routes.demoBenefits}>
+          <Link className="site-button site-button-soft" to={routes.demo}>
             Ver demonstração <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>

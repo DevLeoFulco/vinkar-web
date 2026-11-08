@@ -8,6 +8,7 @@ const navigation = [
   [landingSections.home, 'Início'],
   [landingSections.about, 'Sobre'],
   [landingSections.solutions, 'Soluções'],
+  [landingSections.plans, 'Planos'],
   [landingSections.clients, 'Clientes'],
   [landingSections.values, 'Missão, Visão e Valores'],
   [landingSections.contact, 'Contato'],
@@ -48,18 +49,10 @@ export function LandingHeader() {
             </a>
           ))}
           <div className="site-header-actions">
-            <Link
-              className="site-button site-button-outline"
-              to={routes.demoLogin}
-              onClick={closeMenu}
-            >
+            <Link className="site-button site-button-outline" to={routes.demo} onClick={closeMenu}>
               Entrar
             </Link>
-            <Link
-              className="site-button site-button-primary"
-              to={routes.demoBenefits}
-              onClick={closeMenu}
-            >
+            <Link className="site-button site-button-primary" to={routes.demo} onClick={closeMenu}>
               Comece agora <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </div>

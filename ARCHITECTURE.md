@@ -33,6 +33,18 @@ Os registros de campanha e parceiros da demo continuam fictícios e ficam em `sr
 
 O formulário de contato usa validação do navegador, não envia dados e não simula entrega. Endereço de e-mail, telefone, localização e redes sociais oficiais aguardam confirmação. Termos e política só devem ganhar links quando suas páginas forem publicadas.
 
+## Domínio demonstrativo de perfis e planos
+
+Os modelos sem dependência de React ficam em `src/features/demo/domain/models.ts`. Uma sessão representa uma identidade pessoal, no máximo um perfil pessoal ativo (`CONSUMER` ou `BENEFICIARY`), eventuais papéis administrativos associados a organizações independentes e um plano separado do perfil. Os identificadores de exemplo usam formatos fictícios `person-demo-*` e `organization-demo-*`; não representam CPF, CNPJ nem clientes reais. O papel administrativo não altera o perfil nem concede elegibilidade pessoal a benefícios.
+
+As políticas puras ficam em `src/features/demo/domain/policies.ts` e se aplicam somente aos planos de consumidor. Cada lote calcula sua validade a partir do instante de crédito; cada adesão calcula sua carência a partir do instante de ativação. Os cálculos usam epoch UTC e intervalos exatos de 24 horas, sem consultar o relógio do sistema. PREMIUM representa pontos sem expiração e carência zero.
+
+Essas durações são premissas técnicas temporárias para a demonstração, sujeitas à homologação dos sócios. Não há nesta etapa regras de planos para Empresa ou Beneficiário, nem políticas de upgrade ou downgrade.
+
+O catálogo determinístico dos cenários demonstrativos fica em `src/features/demo/mocks/demoScenarios.ts`, separado dos mocks de campanhas. Ele define uma sessão de Consumidor com plano FREE, uma Empresa com identidade de administrador separada da organização e um Beneficiário com perfil pessoal próprio. `OrganizationAffiliation` representa somente o vínculo demonstrativo com uma organização; não implica elegibilidade, benefícios, pontos ou regras comerciais. Não há perfil pessoal `COMPANY`, nem plano empresarial definido.
+
+A página informativa `/demo/planos?context=...` usa `getConsumerPlanPolicy` por meio de `src/features/demo/planPresentation.ts`, sem repetir os valores temporais nos componentes. As políticas são exibidas somente para Consumidor; Empresa e Beneficiário recebem aviso de que suas condições seguem indefinidas. A página não contrata nem ativa planos e preserva o contexto ao retornar à demonstração.
+
 ## Estilos e acessibilidade
 
 `src/shared/styles/tokens.css` centraliza tipografia, cores, espaçamento, bordas e sombras. `src/shared/styles/components.css` contém os estilos dos componentes UI compartilhados. A marca SVG é compartilhada por landing e demo sem alterar sua aparência aprovada na landing.

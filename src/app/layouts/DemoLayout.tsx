@@ -1,14 +1,26 @@
 import { Outlet } from 'react-router-dom';
 import { DemoFooter, DemoHeader, DemoNotice } from '../../features/demo/DemoShell';
+import { DemoScenarioProvider } from '../../features/demo/DemoScenarioContext';
+import { useDemoScenario } from '../../features/demo/useDemoScenario';
 import '../../features/demo/demo.css';
 
-export function DemoLayout() {
+function DemoLayoutContent() {
+  const { activeScenario } = useDemoScenario();
+
   return (
-    <div className="demo-app">
+    <div className="demo-app" data-demo-scenario-id={activeScenario?.id}>
       <DemoHeader />
       <DemoNotice />
       <Outlet />
       <DemoFooter />
     </div>
+  );
+}
+
+export function DemoLayout() {
+  return (
+    <DemoScenarioProvider>
+      <DemoLayoutContent />
+    </DemoScenarioProvider>
   );
 }

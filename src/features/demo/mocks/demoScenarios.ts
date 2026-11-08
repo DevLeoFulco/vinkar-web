@@ -1,0 +1,164 @@
+import type {
+  DemoSession,
+  Organization,
+  OrganizationAdministration,
+  OrganizationAffiliation,
+  PersonIdentity,
+} from '../domain/models';
+
+export type DemoScenarioContext = 'CONSUMER' | 'BUSINESS' | 'BENEFICIARY';
+
+export type DemoScenarioId = `scenario-demo-${string}`;
+
+type DemoScenarioBase = Readonly<{
+  id: DemoScenarioId;
+  title: string;
+  description: string;
+}>;
+
+export type ConsumerDemoScenario = DemoScenarioBase &
+  Readonly<{
+    context: 'CONSUMER';
+    session: Omit<
+      DemoSession,
+      | 'activePersonalProfile'
+      | 'organizationAdministrations'
+      | 'organizationAffiliations'
+      | 'subscriptionPlan'
+    > & {
+      activePersonalProfile: 'CONSUMER';
+      organizationAdministrations: readonly [];
+      organizationAffiliations: readonly [];
+      subscriptionPlan: 'FREE';
+    };
+  }>;
+
+export type BusinessDemoScenario = DemoScenarioBase &
+  Readonly<{
+    context: 'BUSINESS';
+    session: Omit<
+      DemoSession,
+      'activePersonalProfile' | 'organizationAffiliations' | 'subscriptionPlan'
+    > & {
+      activePersonalProfile: null;
+      organizationAffiliations: readonly [];
+      subscriptionPlan: null;
+    };
+    organization: Organization;
+  }>;
+
+export type BeneficiaryDemoScenario = DemoScenarioBase &
+  Readonly<{
+    context: 'BENEFICIARY';
+    session: Omit<
+      DemoSession,
+      'activePersonalProfile' | 'organizationAdministrations' | 'subscriptionPlan'
+    > & {
+      activePersonalProfile: 'BENEFICIARY';
+      organizationAdministrations: readonly [];
+      organizationAffiliations: readonly [OrganizationAffiliation];
+      subscriptionPlan: null;
+    };
+    organization: Organization;
+  }>;
+
+export type DemoScenario = ConsumerDemoScenario | BusinessDemoScenario | BeneficiaryDemoScenario;
+
+const consumerIdentity = Object.freeze<PersonIdentity>({
+  id: 'person-demo-consumer-001',
+  displayName: 'Consumidor demonstrativo',
+});
+
+const businessAdministratorIdentity = Object.freeze<PersonIdentity>({
+  id: 'person-demo-administrator-001',
+  displayName: 'Administrador demonstrativo',
+});
+
+const beneficiaryIdentity = Object.freeze<PersonIdentity>({
+  id: 'person-demo-beneficiary-001',
+  displayName: 'Beneficiário demonstrativo',
+});
+
+const businessOrganization = Object.freeze<Organization>({
+  id: 'organization-demo-business-001',
+  displayName: 'Empresa demonstrativa 001',
+});
+
+const beneficiaryOrganization = Object.freeze<Organization>({
+  id: 'organization-demo-beneficiary-001',
+  displayName: 'Organização demonstrativa 002',
+});
+
+const businessAdministration = Object.freeze<OrganizationAdministration>({
+  organizationId: businessOrganization.id,
+  role: 'ADMINISTRATOR',
+});
+
+const beneficiaryAffiliation = Object.freeze<OrganizationAffiliation>({
+  organizationId: beneficiaryOrganization.id,
+  type: 'EMPLOYMENT',
+});
+
+const consumerSession = Object.freeze({
+  personIdentity: consumerIdentity,
+  activePersonalProfile: 'CONSUMER',
+  organizationAdministrations: Object.freeze([] as const),
+  organizationAffiliations: Object.freeze([] as const),
+  subscriptionPlan: 'FREE',
+} satisfies ConsumerDemoScenario['session']);
+
+const businessSession = Object.freeze({
+  personIdentity: businessAdministratorIdentity,
+  activePersonalProfile: null,
+  organizationAdministrations: Object.freeze([businessAdministration]),
+  organizationAffiliations: Object.freeze([] as const),
+  subscriptionPlan: null,
+} satisfies BusinessDemoScenario['session']);
+
+const beneficiarySession = Object.freeze({
+  personIdentity: beneficiaryIdentity,
+  activePersonalProfile: 'BENEFICIARY',
+  organizationAdministrations: Object.freeze([] as const),
+  organizationAffiliations: Object.freeze([beneficiaryAffiliation] as const),
+  subscriptionPlan: null,
+} satisfies BeneficiaryDemoScenario['session']);
+
+const consumerScenario = Object.freeze({
+  id: 'scenario-demo-consumer-free',
+  context: 'CONSUMER',
+  title: 'Consumidor',
+  description: 'Pessoa física demonstrativa no plano Gratuito.',
+  session: consumerSession,
+} satisfies ConsumerDemoScenario);
+
+const businessScenario = Object.freeze({
+  id: 'scenario-demo-business-admin',
+  context: 'BUSINESS',
+  title: 'Empresa',
+  description: 'Organização demonstrativa administrada por uma pessoa autorizada.',
+  session: businessSession,
+  organization: businessOrganization,
+} satisfies BusinessDemoScenario);
+
+const beneficiaryScenario = Object.freeze({
+  id: 'scenario-demo-beneficiary',
+  context: 'BENEFICIARY',
+  title: 'Beneficiário',
+  description: 'Pessoa física com vínculo empregatício demonstrativo.',
+  session: beneficiarySession,
+  organization: beneficiaryOrganization,
+} satisfies BeneficiaryDemoScenario);
+
+export const demoScenarios: readonly DemoScenario[] = Object.freeze([
+  consumerScenario,
+  businessScenario,
+  beneficiaryScenario,
+]);
+
+export function getDemoScenario(id: DemoScenarioId): DemoScenario | undefined {
+  return demoScenarios.find((scenario) => scenario.id === id);
+}
+
+export function getDemoScenariosByContext(context: DemoScenarioContext): readonly DemoScenario[] {
+  return demoScenarios.filter((scenario) => scenario.context === context);
+}
