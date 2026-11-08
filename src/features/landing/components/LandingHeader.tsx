@@ -48,18 +48,10 @@ export function LandingHeader() {
             </a>
           ))}
           <div className="site-header-actions">
-            <Link
-              className="site-button site-button-outline"
-              to={routes.demoLogin}
-              onClick={closeMenu}
-            >
+            <Link className="site-button site-button-outline" to={routes.demo} onClick={closeMenu}>
               Entrar
             </Link>
-            <Link
-              className="site-button site-button-primary"
-              to={routes.demoBenefits}
-              onClick={closeMenu}
-            >
+            <Link className="site-button site-button-primary" to={routes.demo} onClick={closeMenu}>
               Comece agora <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </div>

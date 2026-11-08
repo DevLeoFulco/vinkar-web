@@ -1,6 +1,9 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { DemoLayout } from './layouts/DemoLayout';
 import { CampaignsPage } from '../features/demo/CampaignsPage';
+import { DemoBeneficiaryPage } from '../features/demo/DemoBeneficiaryPage';
+import { DemoContextGate } from '../features/demo/DemoContextGate';
+import { DemoProfileSelectionPage } from '../features/demo/DemoProfileSelectionPage';
 import {
   BenefitsPage,
   BusinessPage,
@@ -19,13 +22,63 @@ export function AppRoutes() {
     <Routes>
       <Route path={routes.home} element={<LandingPage />} />
       <Route path={routes.demo} element={<DemoLayout />}>
-        <Route index element={<Navigate to={routes.demoBenefits} replace />} />
-        <Route path="consumidor" element={<ConsumerPage />} />
-        <Route path="empresa" element={<BusinessPage />} />
-        <Route path="campanhas" element={<CampaignsPage />} />
-        <Route path="beneficios" element={<BenefitsPage />} />
-        <Route path="carteira" element={<WalletPage />} />
-        <Route path="parcerias" element={<PartnersPage />} />
+        <Route index element={<DemoProfileSelectionPage />} />
+        <Route
+          path="consumidor"
+          element={
+            <DemoContextGate context="CONSUMER">
+              <ConsumerPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="empresa"
+          element={
+            <DemoContextGate context="BUSINESS">
+              <BusinessPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="beneficiario"
+          element={
+            <DemoContextGate context="BENEFICIARY">
+              <DemoBeneficiaryPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="campanhas"
+          element={
+            <DemoContextGate context="BUSINESS">
+              <CampaignsPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="beneficios"
+          element={
+            <DemoContextGate context="CONSUMER">
+              <BenefitsPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="carteira"
+          element={
+            <DemoContextGate context="CONSUMER">
+              <WalletPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="parcerias"
+          element={
+            <DemoContextGate context="BUSINESS">
+              <PartnersPage />
+            </DemoContextGate>
+          }
+        />
         <Route path="login" element={<SignInPage mode="login" />} />
         <Route path="cadastro" element={<SignInPage mode="cadastro" />} />
         <Route path="*" element={<DemoNotFoundPage />} />

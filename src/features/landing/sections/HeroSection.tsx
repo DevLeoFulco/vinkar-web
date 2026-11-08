@@ -24,7 +24,7 @@ export function HeroSection() {
           oportunidades.
         </p>
         <div className="site-profile-cards">
-          <Link className="site-profile-card consumer" to={routes.demoBenefits}>
+          <Link className="site-profile-card consumer" to={routes.demoLoginConsumer}>
             <img src="/images/cta/cta-consumidor.webp" alt="" />
             <span className="site-profile-icon">
               <UserRound size={20} aria-hidden="true" />
@@ -37,7 +37,7 @@ export function HeroSection() {
               <ArrowRight size={18} aria-hidden="true" />
             </span>
           </Link>
-          <Link className="site-profile-card business" to={routes.demoBusiness}>
+          <Link className="site-profile-card business" to={routes.demoLoginBusiness}>
             <img src="/images/cta/cta-empresa.webp" alt="" />
             <span className="site-profile-icon">
               <Building2 size={20} aria-hidden="true" />
@@ -52,7 +52,7 @@ export function HeroSection() {
           </Link>
         </div>
         <p className="site-hero-slogan">Conexões que geram mais.</p>
-        <Link className="site-hero-more" to={routes.demoBenefits}>
+        <Link className="site-hero-more" to={routes.demo}>
           Conheça a demonstração <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </div>

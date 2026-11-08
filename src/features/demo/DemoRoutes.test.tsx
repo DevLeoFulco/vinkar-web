@@ -4,9 +4,14 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../../app/router';
 
-function renderRoute(path: string) {
+function renderRoute(
+  path: string,
+  state?: { demoContext: 'CONSUMER' | 'BUSINESS' | 'BENEFICIARY' },
+) {
+  const url = new URL(path, 'http://localhost');
+
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[{ pathname: url.pathname, search: url.search, state }]}>
       <AppRoutes />
     </MemoryRouter>,
   );
@@ -30,38 +35,166 @@ describe('isolamento e navegação da demonstração', () => {
     expect(screen.queryByText(/Ambiente de demonstração/)).not.toBeInTheDocument();
   });
 
-  it('direciona os CTAs por perfil para as páginas correspondentes da demo', () => {
+  it('leva as entradas da landing para a seleção ou login pré-selecionado', () => {
     renderRoute('/');
 
     expect(screen.getByRole('link', { name: /Sou consumidor/ })).toHaveAttribute(
       'href',
-      '/demo/beneficios',
+      '/demo/login?context=CONSUMER',
     );
     expect(screen.getByRole('link', { name: /Sou empresa/ })).toHaveAttribute(
       'href',
-      '/demo/empresa',
+      '/demo/login?context=BUSINESS',
     );
-    expect(screen.getByRole('link', { name: /Comece agora/ })).toHaveAttribute(
-      'href',
-      '/demo/beneficios',
-    );
+    expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/demo');
+    expect(screen.getByRole('link', { name: /Comece agora/ })).toHaveAttribute('href', '/demo');
+    expect(
+      screen
+        .getAllByRole('link', { name: 'Conheça a demonstração' })
+        .every((link) => link.getAttribute('href') === '/demo'),
+    ).toBe(true);
+    expect(screen.getByRole('link', { name: 'Ver demonstração' })).toHaveAttribute('href', '/demo');
     expect(
       within(screen.getByRole('banner')).getByRole('link', { name: 'Vinkar' }),
     ).toHaveAttribute('href', '#inicio');
   });
 
-  it('redireciona /demo para benefícios sem renderizar a página inicial removida', () => {
+  it('mantém o contexto Beneficiário travado no login e entra na experiência correspondente', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/login?context=BENEFICIARY');
+
+    const loginPage = within(screen.getByRole('main'));
+    expect(loginPage.getByText('Contexto selecionado')).toBeInTheDocument();
+    expect(loginPage.getByText('Beneficiário')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sou consumidor' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sou empresa' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+
+    expect(screen.getByRole('heading', { name: 'Beneficiário' })).toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Beneficiário')).toBeInTheDocument();
+  });
+
+  it('retorna à seleção quando o login não recebeu um contexto previamente escolhido', () => {
+    renderRoute('/demo/login');
+
+    expect(
+      screen.getByRole('heading', { name: 'Uma Vinkar, diferentes experiências' }),
+    ).toBeInTheDocument();
+  });
+
+  it('redireciona acesso direto ao dashboard empresarial para login com contexto selecionado', () => {
+    renderRoute('/demo/empresa');
+
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('Empresa')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Visão geral da empresa' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('não aceita contexto incompatível para entrar no painel empresarial', () => {
+    renderRoute('/demo/empresa', { demoContext: 'CONSUMER' });
+
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('Empresa')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Visão geral da empresa' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('apresenta a seleção dos três contextos em /demo', () => {
     renderRoute('/demo');
 
-    expect(screen.getByRole('heading', { name: 'Explore benefícios' })).toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: /Uma experiência para cada conexão/ }),
+      screen.getByRole('heading', { name: 'Uma Vinkar, diferentes experiências' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Consumidor' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Empresa' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Beneficiário' })).toBeInTheDocument();
+    expect(screen.getByText('Descubra empresas, conexões e benefícios.')).toBeInTheDocument();
+    expect(screen.getByText('Conheça campanhas, redes e parcerias.')).toBeInTheDocument();
+    expect(screen.getByText('Explore o conceito de benefícios corporativos.')).toBeInTheDocument();
+  });
+
+  it('seleciona Consumidor e abre a experiência existente com o cenário ativo', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo');
+
+    await user.click(screen.getByRole('link', { name: 'Continuar como consumidor' }));
+
+    expect(screen.getByText('Consumidor')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sou empresa' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+
+    expect(
+      screen.getByRole('heading', { name: 'Olá, que bom ter você aqui!' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+  });
+
+  it('seleciona Empresa sem criar um perfil pessoal', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo');
+
+    await user.click(screen.getByRole('link', { name: 'Continuar como empresa' }));
+    expect(within(screen.getByRole('main')).getByText('Empresa')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+
+    expect(screen.getByRole('heading', { name: 'Visão geral da empresa' })).toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Empresa')).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-business-admin',
+    );
+  });
+
+  it('seleciona Beneficiário e apresenta somente o contexto demonstrativo', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo');
+
+    await user.click(screen.getByRole('link', { name: 'Continuar como beneficiário' }));
+    expect(screen.getByText('Beneficiário')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+
+    expect(screen.getByRole('heading', { name: 'Beneficiário' })).toBeInTheDocument();
+    expect(screen.getByText(/identidade própria, separada da organização/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/disponibilidade de benefícios depende das regras da empresa e da Vinkar/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/não confirma vínculo ou elegibilidade real/)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('main')).queryByText(/saldo|pontos|plano/i),
     ).not.toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-beneficiary',
+    );
+  });
+
+  it('preserva o cenário selecionado ao navegar dentro da experiência empresarial', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo');
+
+    await user.click(screen.getByRole('link', { name: 'Continuar como empresa' }));
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    await user.click(screen.getByRole('link', { name: 'Campanhas' }));
+
+    expect(screen.getByRole('heading', { name: 'Minhas campanhas' })).toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Empresa')).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-business-admin',
+    );
   });
 
   it('leva o logo da demonstração de volta ao início da landing', async () => {
     const user = userEvent.setup();
-    renderRoute('/demo/empresa');
+    renderRoute('/demo/empresa', { demoContext: 'BUSINESS' });
 
     await user.click(screen.getByRole('link', { name: 'Vinkar — voltar ao início da Vinkar' }));
 
@@ -110,7 +243,7 @@ describe('isolamento e navegação da demonstração', () => {
   });
 
   it('mantém a rota de campanhas dentro do layout e dos dados demonstrativos', () => {
-    renderRoute('/demo/campanhas');
+    renderRoute('/demo/campanhas', { demoContext: 'BUSINESS' });
 
     expect(document.querySelector('.demo-app')).toContainElement(
       screen.getByRole('heading', { name: 'Minhas campanhas' }),
@@ -126,7 +259,7 @@ describe('isolamento e navegação da demonstração', () => {
 
   it('preserva a criação de campanhas em memória e sinaliza a lista vazia', async () => {
     const user = userEvent.setup();
-    renderRoute('/demo/campanhas');
+    renderRoute('/demo/campanhas', { demoContext: 'BUSINESS' });
 
     await user.click(screen.getByRole('button', { name: 'Nova campanha' }));
     const dialog = screen.getByRole('dialog', { name: 'Nova campanha' });
@@ -147,7 +280,7 @@ describe('isolamento e navegação da demonstração', () => {
 
   it('permite editar campanhas sem alterar a quantidade de registros', async () => {
     const user = userEvent.setup();
-    renderRoute('/demo/campanhas');
+    renderRoute('/demo/campanhas', { demoContext: 'BUSINESS' });
 
     await user.click(screen.getByRole('button', { name: 'Editar Sua próxima visita vale mais' }));
     const dialog = screen.getByRole('dialog', { name: 'Editar campanha' });
@@ -163,7 +296,7 @@ describe('isolamento e navegação da demonstração', () => {
 
   it('mantém foco dentro do modal e o devolve ao controle que o abriu', async () => {
     const user = userEvent.setup();
-    renderRoute('/demo/campanhas');
+    renderRoute('/demo/campanhas', { demoContext: 'BUSINESS' });
 
     const openButton = screen.getByRole('button', { name: 'Nova campanha' });
     await user.click(openButton);
@@ -184,9 +317,9 @@ describe('isolamento e navegação da demonstração', () => {
     expect(document.activeElement).toBe(openButton);
   });
 
-  it('abre e fecha a navegação mobile do demo e navega pelo perfil selecionado', async () => {
+  it('leva a troca de contexto para login antes de entrar na outra experiência', async () => {
     const user = userEvent.setup();
-    const { container } = renderRoute('/demo/beneficios');
+    const { container } = renderRoute('/demo/beneficios', { demoContext: 'CONSUMER' });
     const menuButton = container.querySelector<HTMLButtonElement>('.mobile-menu');
     expect(menuButton).not.toBeNull();
     if (!menuButton) {
@@ -203,8 +336,15 @@ describe('isolamento e navegação da demonstração', () => {
         { name: 'Sou empresa' },
       ),
     );
-    expect(screen.getByRole('heading', { name: 'Visão geral da empresa' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('Empresa')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Visão geral da empresa' }),
+    ).not.toBeInTheDocument();
     expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    expect(screen.getByRole('heading', { name: 'Visão geral da empresa' })).toBeInTheDocument();
   });
 
   it('apresenta uma página 404 fora das rotas conhecidas', () => {

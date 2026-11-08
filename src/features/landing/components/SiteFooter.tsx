@@ -32,7 +32,7 @@ export function SiteFooter() {
                 {label}
               </a>
             ))}
-            <Link to={routes.demoBenefits}>Conheça a demonstração</Link>
+            <Link to={routes.demo}>Conheça a demonstração</Link>
           </div>
           <div className="site-footer-links">
             <h2>Informações</h2>

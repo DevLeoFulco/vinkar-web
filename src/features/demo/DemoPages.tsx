@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
 import {
   ArrowRight,
   Coins,
@@ -10,12 +9,13 @@ import {
   Network,
   Wallet,
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, Navigate, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { routes } from '../../shared/config/routes';
 import { Badge } from '../../shared/components/ui/Badge';
 import { Button } from '../../shared/components/ui/Button';
 import { Card } from '../../shared/components/ui/Card';
 import { demoCampaigns, type CampaignStatus } from './demoData';
+import type { DemoScenarioContext } from './mocks/demoScenarios';
 
 const consumerNavigation = [
   [routes.demoConsumer, 'Visão geral', LayoutDashboard],
@@ -48,6 +48,7 @@ export function DemoShell({ business, children, title, subtitle }: DemoShellProp
             <NavLink
               key={url}
               to={url}
+              state={{ demoContext: business ? 'BUSINESS' : 'CONSUMER' }}
               className={({ isActive }) => `side-link${isActive ? ' active' : ''}`}
             >
               <Icon size={19} aria-hidden="true" />
@@ -164,7 +165,12 @@ export function ConsumerPage() {
       </div>
       <div className="sectionline">
         <h2>Benefícios em destaque</h2>
-        <NavLink to={routes.demoBenefits}>Ver todos →</NavLink>
+        <NavLink
+          to={routes.demoBenefits}
+          state={{ demoContext: 'CONSUMER' satisfies DemoScenarioContext }}
+        >
+          Ver todos →
+        </NavLink>
       </div>
       <BenefitsGrid compact />
     </DemoShell>
@@ -250,7 +256,11 @@ export function BusinessPage() {
         <h2>Gerencie seu negócio</h2>
       </div>
       <div className="cards two">
-        <NavLink className="ui-card ui-card--interactive actiontile" to={routes.demoCampaigns}>
+        <NavLink
+          className="ui-card ui-card--interactive actiontile"
+          to={routes.demoCampaigns}
+          state={{ demoContext: 'BUSINESS' satisfies DemoScenarioContext }}
+        >
           <div className="tile-icon purple">
             <Megaphone aria-hidden="true" />
           </div>
@@ -258,7 +268,11 @@ export function BusinessPage() {
           <p>Crie, edite e organize suas campanhas diretamente na plataforma.</p>
           <span>Gerenciar campanhas →</span>
         </NavLink>
-        <NavLink className="ui-card ui-card--interactive actiontile" to={routes.demoPartners}>
+        <NavLink
+          className="ui-card ui-card--interactive actiontile"
+          to={routes.demoPartners}
+          state={{ demoContext: 'BUSINESS' satisfies DemoScenarioContext }}
+        >
           <div className="tile-icon cyan">
             <Network aria-hidden="true" />
           </div>
@@ -310,11 +324,37 @@ export function PartnersPage() {
 
 export function SignInPage({ mode }: { mode: 'login' | 'cadastro' }) {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<'consumidor' | 'empresa'>('consumidor');
+  const [searchParams] = useSearchParams();
+  const selectedContext = getSelectedDemoContext(searchParams.get('context'));
+
+  if (!selectedContext) {
+    return <Navigate to={routes.demo} replace />;
+  }
+
+  const contextDetails = {
+    CONSUMER: {
+      label: 'Consumidor',
+      destination: routes.demoConsumer,
+    },
+    BUSINESS: {
+      label: 'Empresa',
+      destination: routes.demoBusiness,
+    },
+    BENEFICIARY: {
+      label: 'Beneficiário',
+      destination: routes.demoBeneficiary,
+    },
+  } as const;
+  const selected = contextDetails[selectedContext];
 
   function continueToDemo() {
-    navigate(profile === 'empresa' ? routes.demoBusiness : routes.demoConsumer);
+    navigate(selected.destination, { state: { demoContext: selectedContext } });
   }
+
+  const otherModePath =
+    mode === 'login'
+      ? `${routes.demoSignUp}?context=${selectedContext}`
+      : `${routes.demoLogin}?context=${selectedContext}`;
 
   return (
     <main className="auth-wrap">
@@ -323,26 +363,11 @@ export function SignInPage({ mode }: { mode: 'login' | 'cadastro' }) {
           <LogIn aria-hidden="true" />
         </div>
         <h1>{mode === 'login' ? 'Bem-vindo de volta' : 'Comece sua jornada'}</h1>
-        <p>Escolha como deseja conhecer a Vinkar.</p>
-        <div className="choice" role="group" aria-label="Perfil da demonstração">
-          <Button
-            type="button"
-            className={profile === 'consumidor' ? 'selected' : ''}
-            aria-pressed={profile === 'consumidor'}
-            onClick={() => setProfile('consumidor')}
-            variant="secondary"
-          >
-            Sou consumidor
-          </Button>
-          <Button
-            type="button"
-            className={profile === 'empresa' ? 'selected' : ''}
-            aria-pressed={profile === 'empresa'}
-            onClick={() => setProfile('empresa')}
-            variant="secondary"
-          >
-            Sou empresa
-          </Button>
+        <p>Entre para continuar na experiência selecionada.</p>
+        <div className="auth-context" aria-label={`Contexto selecionado: ${selected.label}`}>
+          <span>Contexto selecionado</span>
+          <strong>{selected.label}</strong>
+          <Link to={routes.demo}>Escolher outro contexto</Link>
         </div>
         <label htmlFor={`signin-email-${mode}`}>
           Seu e-mail
@@ -368,7 +393,7 @@ export function SignInPage({ mode }: { mode: 'login' | 'cadastro' }) {
         <p className="smallprint">
           A navegação é simulada: não criamos contas nem autenticamos usuários.
         </p>
-        <NavLink to={mode === 'login' ? routes.demoSignUp : routes.demoLogin}>
+        <NavLink to={otherModePath}>
           {mode === 'login'
             ? 'Ainda não tem conta? Conheça o cadastro'
             : 'Já conhece a Vinkar? Ir para login'}
@@ -378,14 +403,22 @@ export function SignInPage({ mode }: { mode: 'login' | 'cadastro' }) {
   );
 }
 
+function getSelectedDemoContext(value: string | null): DemoScenarioContext | null {
+  if (value === 'CONSUMER' || value === 'BUSINESS' || value === 'BENEFICIARY') {
+    return value;
+  }
+
+  return null;
+}
+
 export function DemoNotFoundPage() {
   return (
     <main className="not-found">
       <span className="kicker">DEMONSTRAÇÃO</span>
       <h1>Página não encontrada</h1>
       <p>Este caminho não faz parte da demonstração atual.</p>
-      <NavLink className="ui-button ui-button--primary" to={routes.demoBenefits}>
-        Explorar benefícios
+      <NavLink className="ui-button ui-button--primary" to={routes.demo}>
+        Escolher contexto
       </NavLink>
     </main>
   );
