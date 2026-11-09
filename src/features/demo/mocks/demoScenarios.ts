@@ -5,6 +5,7 @@ import type {
   OrganizationAffiliation,
   PersonIdentity,
 } from '../domain/models';
+import { businessDemoOrganization } from './companyNetwork';
 
 export type DemoScenarioContext = 'CONSUMER' | 'BUSINESS' | 'BENEFICIARY';
 
@@ -79,18 +80,13 @@ const beneficiaryIdentity = Object.freeze<PersonIdentity>({
   displayName: 'Beneficiário demonstrativo',
 });
 
-const businessOrganization = Object.freeze<Organization>({
-  id: 'organization-demo-business-001',
-  displayName: 'Empresa demonstrativa 001',
-});
-
 const beneficiaryOrganization = Object.freeze<Organization>({
   id: 'organization-demo-beneficiary-001',
   displayName: 'Organização demonstrativa 002',
 });
 
 const businessAdministration = Object.freeze<OrganizationAdministration>({
-  organizationId: businessOrganization.id,
+  organizationId: businessDemoOrganization.id,
   role: 'ADMINISTRATOR',
 });
 
@@ -137,7 +133,7 @@ const businessScenario = Object.freeze({
   title: 'Empresa',
   description: 'Organização demonstrativa administrada por uma pessoa autorizada.',
   session: businessSession,
-  organization: businessOrganization,
+  organization: businessDemoOrganization,
 } satisfies BusinessDemoScenario);
 
 const beneficiaryScenario = Object.freeze({

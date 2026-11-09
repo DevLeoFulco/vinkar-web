@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import {
+  Building2,
   ArrowRight,
+  ClipboardList,
   Coins,
   Gift,
   LayoutDashboard,
@@ -15,16 +17,33 @@ import { Badge } from '../../shared/components/ui/Badge';
 import { Button } from '../../shared/components/ui/Button';
 import { Card } from '../../shared/components/ui/Card';
 import { demoCampaigns, type CampaignStatus } from './demoData';
+import {
+  getDemoCompanies,
+  demoCompanies,
+  demoOrganizationConnections,
+  getDemoCompany,
+} from './mocks/companyNetwork';
+import {
+  evaluateOfferEligibility,
+  getConsumerNetworkEligibility,
+  type OfferEligibilityResult,
+} from './domain/networkEligibility';
+import type { MainCompanyMembership, PersonIdentityId } from './domain/models';
 import type { DemoScenarioContext } from './mocks/demoScenarios';
+import { useDemoMembershipRequests } from './useDemoMembershipRequests';
+import { useDemoScenario } from './useDemoScenario';
 
 const consumerNavigation = [
   [routes.demoConsumer, 'Visão geral', LayoutDashboard],
+  [routes.demoCompanies, 'Empresas', Building2],
+  [routes.demoMembershipRequests, 'Minhas solicitações', ClipboardList],
   [routes.demoBenefits, 'Benefícios', Gift],
   [routes.demoWallet, 'Minha carteira', Wallet],
 ] as const;
 
 const businessNavigation = [
   [routes.demoBusiness, 'Visão geral', LayoutDashboard],
+  [routes.demoBusinessRequests, 'Solicitações', ClipboardList],
   [routes.demoCampaigns, 'Campanhas', Megaphone],
   [routes.demoPartners, 'Parcerias', Network],
 ] as const;
@@ -38,6 +57,16 @@ type DemoShellProps = {
 
 export function DemoShell({ business, children, title, subtitle }: DemoShellProps) {
   const links = business ? businessNavigation : consumerNavigation;
+  const { activeScenario } = useDemoScenario();
+  const { state } = useDemoMembershipRequests();
+  const pendingRequestCount =
+    business && activeScenario?.context === 'BUSINESS'
+      ? state.requests.filter(
+          (request) =>
+            request.organizationId === activeScenario.organization.id &&
+            request.status === 'PENDING',
+        ).length
+      : 0;
 
   return (
     <main className="app-layout">
@@ -53,6 +82,11 @@ export function DemoShell({ business, children, title, subtitle }: DemoShellProp
             >
               <Icon size={19} aria-hidden="true" />
               {label}
+              {url === routes.demoBusinessRequests && pendingRequestCount > 0 && (
+                <span className="sidebar-count" aria-label={`${pendingRequestCount} pendentes`}>
+                  {pendingRequestCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -112,31 +146,171 @@ function getStatusVariant(status: CampaignStatus): 'success' | 'neutral' | 'warn
   return 'neutral';
 }
 
-function BenefitsGrid({ compact = false }: { compact?: boolean }) {
+function getCampaignsForConsumer(
+  personIdentityId: PersonIdentityId,
+  memberships: readonly MainCompanyMembership[],
+) {
+  const network = getConsumerNetworkEligibility({
+    personIdentityId,
+    memberships,
+    organizations: demoCompanies,
+    connections: demoOrganizationConnections,
+  });
+  return demoCampaigns.map((campaign) => ({
+    campaign,
+    eligibility: evaluateOfferEligibility(
+      {
+        organizationId: campaign.organizationId,
+        offerCategory: campaign.offerCategory,
+        isActive: campaign.status === 'Ativa',
+      },
+      network,
+    ),
+  }));
+}
+
+function getEligibilityText(eligibility: OfferEligibilityResult): string {
+  if (eligibility.accessStatus === 'POTENTIAL') {
+    if (eligibility.offerCategory === 'GENERAL_CAMPAIGN') {
+      return 'Acesso potencial pela rede ativa; não exige compra recente nem saldo de pontos. A participação ainda não foi iniciada, as regras específicas da campanha precisam ser avaliadas e nenhum ponto foi creditado.';
+    }
+    return 'Elegibilidade de rede potencial. Saldo e demais regras ainda precisam ser verificados; nenhum resgate está autorizado e nenhum ponto foi creditado.';
+  }
+  switch (eligibility.reason) {
+    case 'OFFER_NOT_ACTIVE':
+      return 'Esta oferta não está ativa.';
+    case 'NO_ACTIVE_PRIMARY_COMPANY':
+      return 'Sem empresa principal ativa: esta oferta ainda não está acessível neste cenário.';
+    case 'OUTSIDE_ACTIVE_NETWORK':
+      return 'A empresa promotora está fora da rede ativa deste consumidor.';
+    case 'EXCLUSIVE_REQUIRES_PRIMARY_COMPANY':
+      return 'Uma conexão direta não libera um benefício exclusivo. A empresa promotora precisa ser uma empresa principal ativa.';
+    default:
+      return 'A oferta não está acessível neste cenário demonstrativo.';
+  }
+}
+
+function getRelationshipText(eligibility: OfferEligibilityResult): string {
+  if (eligibility.relationship === 'PRINCIPAL') {
+    return 'Empresa principal';
+  }
+  if (eligibility.relationship === 'CONNECTED') {
+    return 'Empresa conectada à rede de';
+  }
+  return 'Fora da rede ativa';
+}
+
+function BenefitsGrid({
+  compact = false,
+  campaignResults,
+}: {
+  compact?: boolean;
+  campaignResults: ReturnType<typeof getCampaignsForConsumer>;
+}) {
+  const visibleCampaigns = campaignResults.slice(0, compact ? 2 : 4);
+
   return (
-    <div className="cards two">
-      {demoCampaigns.slice(0, compact ? 2 : 4).map((campaign, index) => (
-        <Card as="article" className="benefit" key={campaign.id}>
-          <div className={`benefit-cover cover${index}`}>
-            <span aria-hidden="true">{['✂️', '🏋️', '🛒', '🌐'][index]}</span>
-            <small>{campaign.segment}</small>
-          </div>
-          <div className="benefit-body">
-            <Badge variant={getStatusVariant(campaign.status)}>{campaign.status}</Badge>
-            <h3>{campaign.title}</h3>
-            <p>{campaign.description}</p>
-            <div className="benefit-foot">
-              <small>{campaign.business}</small>
-              <span>Ver detalhes →</span>
-            </div>
-          </div>
+    <>
+      {visibleCampaigns.length === 0 ? (
+        <Card className="consumer-offers-empty" role="status">
+          <p>Não há ofertas demonstrativas cadastradas.</p>
         </Card>
-      ))}
-    </div>
+      ) : (
+        <div className="cards two consumer-offers">
+          {visibleCampaigns.map(({ campaign, eligibility }, index) => {
+            const promoter = getDemoCompany(campaign.organizationId);
+            const originatingCompanies = eligibility.originatingMainCompanyIds
+              .map((organizationId) => getDemoCompany(organizationId)?.displayName)
+              .filter((name): name is string => Boolean(name));
+
+            return (
+              <Card as="article" className="benefit consumer-offer" key={campaign.id}>
+                <div className={`benefit-cover cover${index}`}>
+                  <span aria-hidden="true">{['✂️', '🏋️', '🛒', '🌐'][index]}</span>
+                  <small>{campaign.segment}</small>
+                </div>
+                <div className="benefit-body">
+                  <div className="consumer-offer-badges">
+                    <Badge variant={getStatusVariant(campaign.status)}>{campaign.status}</Badge>
+                    <Badge variant="neutral">
+                      {campaign.offerCategory === 'GENERAL_CAMPAIGN'
+                        ? 'Campanha geral'
+                        : campaign.offerCategory === 'NETWORK_BENEFIT'
+                          ? 'Benefício de rede'
+                          : 'Benefício exclusivo'}
+                    </Badge>
+                    <Badge
+                      variant={eligibility.accessStatus === 'POTENTIAL' ? 'success' : 'warning'}
+                    >
+                      {eligibility.accessStatus === 'POTENTIAL'
+                        ? 'Acesso potencial'
+                        : 'Indisponível'}
+                    </Badge>
+                  </div>
+                  <h3>{campaign.title}</h3>
+                  <p>{campaign.description}</p>
+                  <dl className="consumer-offer-origin">
+                    <div>
+                      <dt>Empresa promotora</dt>
+                      <dd>
+                        {promoter?.displayName ?? 'Organização demonstrativa não identificada'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Relação com sua rede</dt>
+                      <dd>{getRelationshipText(eligibility)}</dd>
+                    </div>
+                    {originatingCompanies.length > 0 && (
+                      <div>
+                        <dt>Empresas principais de origem</dt>
+                        <dd>{originatingCompanies.join(', ')}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <p
+                    className={`consumer-offer-access consumer-offer-access--${eligibility.accessStatus.toLowerCase()}`}
+                    role="status"
+                  >
+                    {getEligibilityText(eligibility)}
+                  </p>
+                  {eligibility.pendingRequirements.length > 0 && (
+                    <ul className="consumer-offer-requirements" aria-label="Requisitos pendentes">
+                      {eligibility.pendingRequirements.map((requirement) => (
+                        <li key={requirement}>
+                          {requirement === 'OFFER_RULES_NOT_EVALUATED'
+                            ? 'Regras específicas da oferta pendentes'
+                            : requirement === 'BALANCE_NOT_VERIFIED'
+                              ? 'Saldo necessário para eventual resgate ainda não verificado'
+                              : 'Condições de resgate ainda não avaliadas'}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+      <p className="consumer-offers-disclaimer">
+        A elegibilidade da rede não substitui as condições específicas da oferta nem autoriza
+        resgates. Esta demonstração não concede ou movimenta pontos.
+      </p>
+    </>
   );
 }
 
 export function ConsumerPage() {
+  const { activeScenario } = useDemoScenario();
+  const { state } = useDemoMembershipRequests();
+  const campaignResults =
+    activeScenario?.context === 'CONSUMER'
+      ? getCampaignsForConsumer(activeScenario.session.personIdentity.id, state.memberships)
+      : [];
+  const eligibleCampaignCount = campaignResults.filter(
+    ({ eligibility }) => eligibility.accessStatus === 'POTENTIAL',
+  ).length;
+
   return (
     <DemoShell
       business={false}
@@ -151,9 +325,9 @@ export function ConsumerPage() {
           icon={<Coins size={20} />}
         />
         <Metric
-          label="Benefícios disponíveis"
-          value="04"
-          note="Conheça as oportunidades"
+          label="Acesso potencial"
+          value={String(eligibleCampaignCount).padStart(2, '0')}
+          note="Conforme sua rede ativa"
           icon={<Gift size={20} />}
         />
         <Metric
@@ -172,19 +346,26 @@ export function ConsumerPage() {
           Ver todos →
         </NavLink>
       </div>
-      <BenefitsGrid compact />
+      <BenefitsGrid campaignResults={campaignResults} compact />
     </DemoShell>
   );
 }
 
 export function BenefitsPage() {
+  const { activeScenario } = useDemoScenario();
+  const { state } = useDemoMembershipRequests();
+  const campaignResults =
+    activeScenario?.context === 'CONSUMER'
+      ? getCampaignsForConsumer(activeScenario.session.personIdentity.id, state.memberships)
+      : [];
+
   return (
     <DemoShell
       business={false}
       title="Explore benefícios"
-      subtitle="Descubra oportunidades dos nossos parceiros demonstrativos."
+      subtitle="Consulte campanhas e benefícios demonstrativos conforme sua rede ativa."
     >
-      <BenefitsGrid />
+      <BenefitsGrid campaignResults={campaignResults} />
     </DemoShell>
   );
 }
@@ -286,13 +467,6 @@ export function BusinessPage() {
 }
 
 export function PartnersPage() {
-  const partners = [
-    ['✂️', 'Barbearia do Matuto', 'Barbearia'],
-    ['🛒', 'Varejão Econômico', 'Supermercado'],
-    ['🏋️', 'Academia Hangar Fit', 'Academia'],
-    ['🌐', 'Powertec', 'Internet'],
-  ];
-
   return (
     <DemoShell
       business
@@ -302,13 +476,13 @@ export function PartnersPage() {
       <Card className="panel">
         <h2>Empresas da rede demonstrativa</h2>
         <div className="partner-grid">
-          {partners.map(([emoji, name, segment]) => (
-            <Card as="article" className="partner" key={name}>
+          {getDemoCompanies().map((company) => (
+            <Card as="article" className="partner" key={company.id}>
               <div className="partner-icon" aria-hidden="true">
-                {emoji}
+                {company.symbol}
               </div>
-              <strong>{name}</strong>
-              <small>{segment}</small>
+              <strong>{company.displayName}</strong>
+              <small>{company.segmentLabel}</small>
               <Badge>Exemplo fictício</Badge>
             </Card>
           ))}

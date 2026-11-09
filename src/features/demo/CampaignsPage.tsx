@@ -5,6 +5,7 @@ import { Button } from '../../shared/components/ui/Button';
 import { Card } from '../../shared/components/ui/Card';
 import { DemoShell } from './DemoPages';
 import { demoCampaigns, type Campaign, type CampaignStatus } from './demoData';
+import { businessDemoOrganization } from './mocks/companyNetwork';
 
 export function CampaignsPage() {
   const [campaigns, setCampaigns] = useState(demoCampaigns);
@@ -93,6 +94,8 @@ export function CampaignsPage() {
         {
           id: Date.now(),
           title,
+          organizationId: businessDemoOrganization.id,
+          offerCategory: 'GENERAL_CAMPAIGN',
           business: 'Minha empresa',
           segment: 'Geral',
           description,
