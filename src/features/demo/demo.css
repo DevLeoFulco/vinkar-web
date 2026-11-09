@@ -575,6 +575,83 @@
   color: var(--color-purple-700);
   font-weight: 800;
 }
+.demo-app .consumer-offers {
+  align-items: stretch;
+}
+.demo-app .consumer-offer {
+  height: 100%;
+}
+.demo-app .consumer-offer .benefit-body {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+.demo-app .consumer-offer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.demo-app .consumer-offer h3 {
+  margin: 0;
+}
+.demo-app .consumer-offer .benefit-body > p {
+  min-height: 0;
+  margin: 0;
+}
+.demo-app .consumer-offer-origin {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+.demo-app .consumer-offer-origin > div {
+  display: grid;
+  gap: 0.2rem;
+}
+.demo-app .consumer-offer-origin dt {
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.demo-app .consumer-offer-origin dd {
+  margin: 0;
+  color: var(--color-navy-900);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+.demo-app .consumer-offer .consumer-offer-access {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 0.7rem;
+  font-size: var(--font-size-eyebrow);
+  line-height: 1.55;
+}
+.demo-app .consumer-offer-access--potential {
+  color: var(--color-cyan-700);
+  background: var(--color-cyan-100);
+}
+.demo-app .consumer-offer-access--unavailable {
+  color: var(--color-navy-800);
+  background: var(--color-surface-soft);
+}
+.demo-app .consumer-offer-requirements {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--color-muted);
+  font-size: var(--font-size-eyebrow);
+}
+.demo-app .consumer-offers-disclaimer,
+.demo-app .consumer-offers-empty p {
+  margin: 1rem 0 0;
+  color: var(--color-muted);
+  font-size: var(--font-size-eyebrow);
+}
+.demo-app .consumer-offers-empty {
+  padding: 1rem;
+}
 .demo-app .wallet-banner {
   background: linear-gradient(
     115deg,
