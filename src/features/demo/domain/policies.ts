@@ -6,14 +6,17 @@ const CONSUMER_PLAN_POLICIES: Readonly<Record<SubscriptionPlan, PlanPolicy>> = O
   FREE: Object.freeze({
     pointsValidityDays: 90,
     mainNetworkExitGracePeriodDays: 30,
+    mainCompanyCapacity: 1,
   }),
   PRO: Object.freeze({
     pointsValidityDays: 180,
     mainNetworkExitGracePeriodDays: 15,
+    mainCompanyCapacity: 3,
   }),
   PREMIUM: Object.freeze({
     pointsValidityDays: null,
     mainNetworkExitGracePeriodDays: 0,
+    mainCompanyCapacity: 5,
   }),
 });
 

@@ -1,9 +1,12 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { DemoLayout } from './layouts/DemoLayout';
 import { CampaignsPage } from '../features/demo/CampaignsPage';
+import { CompaniesPage } from '../features/demo/CompaniesPage';
 import { DemoBeneficiaryPage } from '../features/demo/DemoBeneficiaryPage';
 import { DemoContextGate } from '../features/demo/DemoContextGate';
 import { DemoPlansPage } from '../features/demo/DemoPlansPage';
+import { MembershipRequestsPage } from '../features/demo/MembershipRequestsPage';
+import { BusinessMembershipRequestsPage } from '../features/demo/BusinessMembershipRequestsPage';
 import { DemoProfileSelectionPage } from '../features/demo/DemoProfileSelectionPage';
 import {
   BenefitsPage,
@@ -34,10 +37,34 @@ export function AppRoutes() {
           }
         />
         <Route
+          path="empresas"
+          element={
+            <DemoContextGate context="CONSUMER">
+              <CompaniesPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="solicitacoes"
+          element={
+            <DemoContextGate context="CONSUMER">
+              <MembershipRequestsPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
           path="empresa"
           element={
             <DemoContextGate context="BUSINESS">
               <BusinessPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="empresa/solicitacoes"
+          element={
+            <DemoContextGate context="BUSINESS">
+              <BusinessMembershipRequestsPage />
             </DemoContextGate>
           }
         />

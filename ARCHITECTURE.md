@@ -31,6 +31,8 @@ As ilustrações são servidas diretamente de `public/images/`, agrupadas por fi
 
 Os registros de campanha e parceiros da demo continuam fictícios e ficam em `src/features/demo/demoData.ts`. O estado do CRUD permanece local ao componente, sem persistência. A landing usa textos de validação e cartões de segmento sem nomes comerciais ou marcas.
 
+O catálogo compartilhado de estabelecimentos demonstrativos fica em `src/features/demo/mocks/companyNetwork.ts`. `OrganizationConnection` identifica uma conexão direta entre duas organizações; a consulta não infere conexões transitivas nem associa conexões a identidades pessoais. As listas de descoberta do Consumidor e de parcerias da Empresa reutilizam o mesmo catálogo. Os dados são fictícios e conexões não implicam elegibilidade ou parceria comercial real.
+
 O formulário de contato usa validação do navegador, não envia dados e não simula entrega. Endereço de e-mail, telefone, localização e redes sociais oficiais aguardam confirmação. Termos e política só devem ganhar links quando suas páginas forem publicadas.
 
 ## Domínio demonstrativo de perfis e planos
@@ -43,6 +45,22 @@ Essas durações são premissas técnicas temporárias para a demonstração, su
 
 O catálogo determinístico dos cenários demonstrativos fica em `src/features/demo/mocks/demoScenarios.ts`, separado dos mocks de campanhas. Ele define uma sessão de Consumidor com plano FREE, uma Empresa com identidade de administrador separada da organização e um Beneficiário com perfil pessoal próprio. `OrganizationAffiliation` representa somente o vínculo demonstrativo com uma organização; não implica elegibilidade, benefícios, pontos ou regras comerciais. Não há perfil pessoal `COMPANY`, nem plano empresarial definido.
 
+As conexões diretas entre organizações e o catálogo fictício de empresas ficam em `src/features/demo/mocks/companyNetwork.ts`. `OrganizationConnection` referencia duas organizações; consultas não inferem conexões transitivas nem ligam organizações a identidades pessoais. As listas de descoberta do Consumidor e de parcerias da Empresa compartilham esses mocks.
+
+`src/features/demo/domain/networkEligibility.ts` calcula a união da rede de uma identidade usando somente seus vínculos `ACTIVE`, as organizações e as conexões diretas do catálogo compartilhado. Organizações principais são deduplicadas; uma organização ligada diretamente a mais de uma principal aparece uma vez e preserva todas as origens. Solicitações pendentes, devolvidas ou rejeitadas não são entradas para a política e não criam alcance de rede. Não há expansão transitiva.
+
+As ofertas demonstrativas em `src/features/demo/demoData.ts` distinguem `GENERAL_CAMPAIGN`, `NETWORK_BENEFIT` e `MAIN_COMPANY_EXCLUSIVE`; categoria não é o resultado da consulta de elegibilidade. Campanhas gerais e benefícios de rede usam a união das empresas principais ativas e de suas conexões diretas. Benefícios exclusivos exigem vínculo principal ativo diretamente com a organização promotora. A consulta respeita o status existente (`Ativa`, `Rascunho` ou `Encerrada`), não infere conexões transitivas e não duplica uma organização alcançada por mais de uma rede. O resultado é isolado por `PersonIdentityId` e inclui a relação e as empresas principais de origem.
+
+Elegibilidade de rede e de oferta permanecem distintas de participação em campanha, crédito confirmado de pontos e autorização de resgate. Campanhas gerais podem ter participação potencial sem exigência de compra recente ou saldo; nenhuma participação é registrada automaticamente. Benefícios de rede e exclusivos podem ter acesso potencial, mas saldo e regras de resgate ficam como requisitos pendentes, sem autorização definitiva. A interface identifica a organização promotora, categoria, origem, situação e requisitos ainda não verificados. Nenhuma consulta concede, credita ou movimenta pontos.
+
+Essas regras não substituem público-alvo, vigência, limites ou demais condições de oferta ainda não modeladas. Classificações e interpretações comerciais que não estejam homologadas permanecem decisões pendentes. Não há carteira ou resgate implementados. A elegibilidade demonstrativa não compartilha dados pessoais com organizações conectadas. Qualquer futura verificação de vínculo ou acesso a dados dependerá de finalidade definida, base legal aplicável, minimização de dados e controles de acesso; não se presume autorização para expor cadastros completos.
+
+As solicitações demonstrativas de adesão ficam em memória no `DemoMembershipRequestProvider`, associadas ao `PersonIdentityId`. O domínio valida perfil consumidor, organização existente, vínculo já ativo, capacidade do plano, estado da solicitação e instante UTC injetado. Cada comando recebe um identificador idempotente; reutilizá-lo com outro conteúdo é rejeitado. A capacidade é derivada de `PlanPolicy` (FREE: 1, PRO: 3, PREMIUM: 5) e considera solicitações pendentes/devolvidas e vínculos ativos.
+
+O ciclo demonstrativo suporta `PENDING`, `RETURNED`, `REJECTED` e `APPROVED`. A organização pode devolver uma solicitação com motivo para correção, rejeitá-la ou aprová-la. A aprovação registra uma `OrganizationAffiliation` ativa, com plano e instante UTC de ativação, e a carência é calculada a partir dessa ativação; a solicitação pendente não inicia carência. Cada submissão, decisão, retorno e reenvio gera um registro de auditoria. As operações de estado são aplicadas como uma única atualização imutável do provider, que permanece apenas em memória e é perdida ao recarregar a aplicação.
+
+O cenário usa um perfil de Consumidor demonstrativo com dados fictícios e código público próprio; não utiliza CPF, CNPJ ou dados pessoais reais. A mesma organização demonstrativa é compartilhada pelo catálogo e pelo cenário empresarial. A página empresarial `/demo/empresa/solicitacoes` limita a análise à organização do cenário ativo e exige papel administrativo para decisões no domínio. `/demo/solicitacoes` permite ao Consumidor consultar o estado, corrigir os dados após devolução, reenviar e acompanhar vínculo/capacidade; essas telas não afirmam elegibilidade automática a benefícios. A área não inventa histórico de encerramentos fora dos registros do cenário nem sugestões comerciais.
+
 A página informativa `/demo/planos?context=...` usa `getConsumerPlanPolicy` por meio de `src/features/demo/planPresentation.ts`, sem repetir os valores temporais nos componentes. As políticas são exibidas somente para Consumidor; Empresa e Beneficiário recebem aviso de que suas condições seguem indefinidas. A página não contrata nem ativa planos e preserva o contexto ao retornar à demonstração.
 
 ## Estilos e acessibilidade
@@ -51,7 +69,7 @@ A página informativa `/demo/planos?context=...` usa `getConsumerPlanPolicy` por
 
 Os estilos institucionais permanecem sob `.site`. Todos os seletores de apresentação da demonstração, incluindo suas media queries, ficam sob `.demo-app`; resets, estilos de `body`, controles e fontes são definidos globalmente uma única vez.
 
-Botões, badges e cards compartilhados são usados nos fluxos de campanha, benefícios, métricas e carteira. A navegação do demo informa seu estado expandido, permite fechar com Escape e mantém a sidebar navegável em telas pequenas. O modal de campanhas associa rótulos e descrição, move o foco ao abrir, contém a navegação por Tab, fecha com Escape e devolve o foco ao controle de origem.
+Botões, badges e cards compartilhados são usados nos fluxos de campanha, benefícios, métricas e carteira. A navegação do demo informa seu estado expandido, permite fechar com Escape e mantém a sidebar navegável em telas pequenas. Os modais de campanha e de condições de adesão associam rótulos, movem o foco ao abrir, contêm a navegação por Tab, fecham com Escape e devolvem o foco ao controle de origem.
 
 O cabeçalho institucional é sticky, o menu mobile expõe estado acessível, links usam âncoras internas e a rolagem respeita `prefers-reduced-motion`. Imagens secundárias usam lazy loading; a imagem principal recebe prioridade de carregamento.
 

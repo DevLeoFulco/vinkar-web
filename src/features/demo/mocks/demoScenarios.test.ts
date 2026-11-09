@@ -101,6 +101,7 @@ describe('catálogo de cenários demonstrativos', () => {
     expect(getConsumerPlanPolicy('FREE')).toEqual({
       pointsValidityDays: 90,
       mainNetworkExitGracePeriodDays: 30,
+      mainCompanyCapacity: 1,
     });
     expect(business).not.toHaveProperty('price');
     expect(beneficiary).not.toHaveProperty('price');
