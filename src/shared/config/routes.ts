@@ -9,6 +9,7 @@ export const routes = {
   demoCompanies: '/demo/empresas',
   demoMembershipRequests: '/demo/solicitacoes',
   demoBusiness: '/demo/empresa',
+  demoBusinessRequests: '/demo/empresa/solicitacoes',
   demoBeneficiary: '/demo/beneficiario',
   demoCampaigns: '/demo/campanhas',
   demoBenefits: '/demo/beneficios',

@@ -8,7 +8,7 @@ import {
 
 describe('catálogo demonstrativo de empresas e conexões diretas', () => {
   it('define empresas e conexões com identificadores estáveis e únicos', () => {
-    expect(getDemoCompanies()).toHaveLength(4);
+    expect(getDemoCompanies()).toHaveLength(5);
     expect(new Set(demoCompanies.map(({ id }) => id)).size).toBe(demoCompanies.length);
     expect(new Set(demoOrganizationConnections.map(({ id }) => id)).size).toBe(
       demoOrganizationConnections.length,

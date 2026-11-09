@@ -1,7 +1,14 @@
 import { createContext } from 'react';
-import type { MainCompanyMembershipRequest, OrganizationId } from './domain/models';
+import type {
+  DemoMembershipState,
+  MainCompanyMembership,
+  MainCompanyMembershipRequest,
+  MembershipApplicantProfile,
+  MembershipRequestId,
+  OrganizationId,
+} from './domain/models';
 import type { DemoScenario } from './mocks/demoScenarios';
-import type { CreateMembershipRequestResult } from './domain/membershipRequests';
+import type { MembershipOperationResult } from './domain/membershipRequests';
 
 export type RequestSubmission = Readonly<{
   scenario: DemoScenario;
@@ -9,9 +16,37 @@ export type RequestSubmission = Readonly<{
   requestedAt: Date;
 }>;
 
+export type RequestDecision = Readonly<{
+  scenario: DemoScenario;
+  requestId: MembershipRequestId;
+  decidedAt: Date;
+  reason?: string;
+}>;
+
+export type RequestResubmission = Readonly<{
+  scenario: DemoScenario;
+  requestId: MembershipRequestId;
+  applicantProfile: MembershipApplicantProfile & {
+    personIdentityId: MainCompanyMembershipRequest['personIdentityId'];
+  };
+  resubmittedAt: Date;
+}>;
+
 export type DemoMembershipRequestContextValue = Readonly<{
-  pendingRequests: readonly MainCompanyMembershipRequest[];
-  submitRequest: (submission: RequestSubmission) => CreateMembershipRequestResult;
+  state: DemoMembershipState;
+  submitRequest: (
+    submission: RequestSubmission,
+  ) => MembershipOperationResult<MainCompanyMembershipRequest>;
+  approveRequest: (decision: RequestDecision) => MembershipOperationResult<MainCompanyMembership>;
+  rejectRequest: (
+    decision: RequestDecision,
+  ) => MembershipOperationResult<MainCompanyMembershipRequest>;
+  returnRequest: (
+    decision: RequestDecision & { reason: string },
+  ) => MembershipOperationResult<MainCompanyMembershipRequest>;
+  resubmitRequest: (
+    resubmission: RequestResubmission,
+  ) => MembershipOperationResult<MainCompanyMembershipRequest>;
 }>;
 
 export const DemoMembershipRequestContext = createContext<DemoMembershipRequestContextValue | null>(

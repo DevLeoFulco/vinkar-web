@@ -122,18 +122,24 @@ describe('isolamento e navegação da demonstração', () => {
 
     expect(screen.getByRole('heading', { name: 'Empresas e conexões' })).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Empresas demonstrativas' })).toBeInTheDocument();
-    expect(screen.getAllByRole('listitem')).toHaveLength(4);
-    expect(screen.getAllByRole('article')).toHaveLength(4);
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getAllByRole('article')).toHaveLength(5);
     const companySegments = Array.from(
       screen
         .getByRole('list', { name: 'Empresas demonstrativas' })
         .querySelectorAll('.company-catalog-segment'),
       (segment) => segment.textContent,
     );
-    expect(companySegments).toEqual(['Barbearia', 'Supermercado', 'Academia', 'Internet']);
+    expect(companySegments).toEqual([
+      'Barbearia',
+      'Supermercado',
+      'Academia',
+      'Internet',
+      'Serviços',
+    ]);
     expect(screen.getByText('2 conexões diretas')).toBeInTheDocument();
     expect(screen.getAllByText('1 conexão direta')).toHaveLength(2);
-    expect(screen.getByText('0 conexões diretas')).toBeInTheDocument();
+    expect(screen.getAllByText('0 conexões diretas')).toHaveLength(2);
     expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
     expect(document.querySelector('.demo-app')).toHaveAttribute(
       'data-demo-scenario-id',
@@ -225,7 +231,7 @@ describe('isolamento e navegação da demonstração', () => {
     const dialog = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
     expect(dialog).toBeInTheDocument();
     expect(document.activeElement).toHaveAttribute('aria-label', 'Fechar condições');
-    expect(screen.getAllByRole('article')).toHaveLength(4);
+    expect(screen.getAllByRole('article')).toHaveLength(5);
     await user.keyboard('{Shift>}{Tab}{/Shift}');
     expect(document.activeElement).toHaveTextContent('Enviar solicitação demonstrativa');
 
@@ -301,13 +307,9 @@ describe('isolamento e navegação da demonstração', () => {
     const secondCompanyPanel = within(secondCompany as HTMLElement);
     await user.click(secondCompanyPanel.getByRole('button', { name: 'Conhecer condições' }));
     const secondDialog = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
+    expect(within(secondDialog).getByText(/capacidade.*plano.*atingida/i)).toBeInTheDocument();
     expect(
-      within(secondDialog).getByText(/já há uma solicitação pendente para outra empresa/i),
-    ).toBeInTheDocument();
-    expect(
-      within(secondDialog).queryByRole('button', {
-        name: 'Enviar solicitação demonstrativa',
-      }),
+      within(secondDialog).queryByRole('button', { name: 'Enviar solicitação demonstrativa' }),
     ).not.toBeInTheDocument();
     expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
     expect(document.querySelector('.demo-app')).toHaveAttribute(
@@ -335,8 +337,8 @@ describe('isolamento e navegação da demonstração', () => {
     await user.click(screen.getByRole('link', { name: 'Minhas solicitações' }));
     expect(screen.getByRole('heading', { name: 'Minhas solicitações' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Barbearia Ponto Zero Demo' })).toBeInTheDocument();
-    expect(screen.getByText('Aguardando aprovação')).toBeInTheDocument();
-    expect(screen.getByText(/não ativa um vínculo/)).toBeInTheDocument();
+    expect(screen.getByText('Pendente')).toBeInTheDocument();
+    expect(screen.getByText(/Nenhum vínculo foi ativado/)).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Empresas' }));
     const revisitedCompany = screen
@@ -367,7 +369,7 @@ describe('isolamento e navegação da demonstração', () => {
 
     expect(screen.getByRole('heading', { name: 'Minhas solicitações' })).toBeInTheDocument();
     expect(
-      screen.getByText('Você ainda não possui solicitações pendentes neste cenário.'),
+      screen.getByText('Você ainda não possui solicitações neste cenário demonstrativo.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Conhecer empresas' })).toHaveAttribute(
       'href',
@@ -385,6 +387,104 @@ describe('isolamento e navegação da demonstração', () => {
     expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
     expect(within(screen.getByRole('main')).getByText('Consumidor')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Minhas solicitações' })).not.toBeInTheDocument();
+  });
+
+  it('permite retornar, corrigir, reenviar e aprovar solicitação entre contextos', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    const businessCompany = screen
+      .getByRole('heading', { name: 'Empresa demonstrativa 001' })
+      .closest('article');
+    expect(businessCompany).not.toBeNull();
+    await user.click(
+      within(businessCompany as HTMLElement).getByRole('button', {
+        name: 'Conhecer condições',
+      }),
+    );
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Enviar solicitação demonstrativa',
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Fechar condições' }));
+
+    await user.click(screen.getByRole('link', { name: 'Sou empresa' }));
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    await user.click(screen.getByRole('link', { name: /^Solicitações/ }));
+
+    expect(screen.getByRole('heading', { name: 'Solicitações recebidas' })).toBeInTheDocument();
+    expect(screen.getByText('1 pendente para análise.')).toBeInTheDocument();
+    expect(screen.getByText('Camila Nogueira Demonstrativa')).toBeInTheDocument();
+    expect(screen.getByText('Código VK-DEMO-0001')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^Solicitações/ })).toHaveAttribute(
+      'href',
+      '/demo/empresa/solicitacoes',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Analisar solicitação' }));
+    const reviewDialog = screen.getByRole('dialog', { name: 'Camila Nogueira Demonstrativa' });
+    expect(within(reviewDialog).getByText(/Empresa demonstrativa 001/i)).toBeInTheDocument();
+    expect(within(reviewDialog).getByText('camila.nogueira@example.com')).toBeInTheDocument();
+    await user.click(within(reviewDialog).getByRole('button', { name: 'Retornar' }));
+
+    const reason = within(reviewDialog).getByRole('textbox', { name: 'Motivo do retorno' });
+    await user.type(reason, 'Informe um telefone demonstrativo atualizado.');
+    await user.click(within(reviewDialog).getByRole('button', { name: 'Confirmar retorno' }));
+
+    expect(screen.getAllByText('Retornado').length).toBeGreaterThan(1);
+    expect(screen.getByText('0 pendentes para análise.')).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Sou consumidor' }));
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    await user.click(screen.getByRole('link', { name: 'Minhas solicitações' }));
+
+    expect(screen.getByText('Informe um telefone demonstrativo atualizado.')).toBeInTheDocument();
+    expect(screen.getByText(/1 de 1 empresas principais utilizadas/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Corrigir informações' }));
+    const correctionDialog = screen.getByRole('dialog', {
+      name: 'Corrigir informações demonstrativas',
+    });
+    const email = within(correctionDialog).getByRole('textbox', {
+      name: 'E-mail demonstrativo',
+    });
+    await user.clear(email);
+    await user.type(email, 'camila.corrigida@example.com');
+    await user.click(
+      within(correctionDialog).getByRole('button', { name: 'Reenviar solicitação' }),
+    );
+
+    expect(screen.getByText('Pendente')).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Sou empresa' }));
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    await user.click(screen.getByRole('link', { name: /^Solicitações/ }));
+    await user.click(screen.getByRole('button', { name: 'Analisar solicitação' }));
+
+    const secondReview = screen.getByRole('dialog', { name: 'Camila Nogueira Demonstrativa' });
+    expect(within(secondReview).getByText('camila.corrigida@example.com')).toBeInTheDocument();
+    expect(within(secondReview).getByText('Retornada')).toBeInTheDocument();
+    expect(within(secondReview).getByText('Reenviada')).toBeInTheDocument();
+    await user.click(within(secondReview).getByRole('button', { name: 'Aprovar' }));
+
+    expect(screen.getAllByText('Aprovado').length).toBeGreaterThan(1);
+    expect(screen.getByText('0 pendentes para análise.')).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Sou consumidor' }));
+    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    await user.click(screen.getByRole('link', { name: 'Minhas solicitações' }));
+
+    expect(screen.getByText(/Vínculo ativo/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Elegibilidade de saída conforme o plano na ativação/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/não concede benefícios automaticamente/)).toBeInTheDocument();
+  }, 15_000);
+
+  it('protege a rota empresarial de solicitações sem o contexto Empresa', () => {
+    renderRoute('/demo/empresa/solicitacoes');
+
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Solicitações recebidas' }),
+    ).not.toBeInTheDocument();
   });
 
   it('protege o catálogo contra acesso direto sem o contexto Consumidor', () => {
@@ -407,12 +507,13 @@ describe('isolamento e navegação da demonstração', () => {
     renderRoute('/demo/parcerias', { demoContext: 'BUSINESS' });
 
     expect(screen.getByRole('heading', { name: 'Rede de parcerias' })).toBeInTheDocument();
-    expect(screen.getAllByRole('article')).toHaveLength(4);
+    expect(screen.getAllByRole('article')).toHaveLength(5);
     for (const name of [
       'Barbearia Ponto Zero Demo',
       'Mercado Raiz Demo',
       'Academia Horizonte Demo',
       'Provedor Nuvem Azul Demo',
+      'Empresa demonstrativa 001',
     ]) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }

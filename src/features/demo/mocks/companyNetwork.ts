@@ -1,6 +1,6 @@
 import type { Organization, OrganizationConnection, OrganizationId } from '../domain/models';
 
-export type DemoCompanySegment = 'ACADEMY' | 'BARBERSHOP' | 'SUPERMARKET' | 'INTERNET';
+export type DemoCompanySegment = 'ACADEMY' | 'BARBERSHOP' | 'SUPERMARKET' | 'INTERNET' | 'SERVICES';
 
 export type DemoCompany = Readonly<
   Organization & {
@@ -47,11 +47,25 @@ const internetProvider: DemoCompany = Object.freeze({
   description: 'Provedor fictício de serviços de internet.',
 });
 
+export const businessDemoOrganization: Organization = Object.freeze({
+  id: 'organization-demo-business-001',
+  displayName: 'Empresa demonstrativa 001',
+});
+
+const businessDemoCompany: DemoCompany = Object.freeze({
+  ...businessDemoOrganization,
+  segment: 'SERVICES',
+  segmentLabel: 'Serviços',
+  symbol: '🏢',
+  description: 'Organização fictícia do cenário de análise empresarial.',
+});
+
 export const demoCompanies: readonly DemoCompany[] = Object.freeze([
   barbershop,
   supermarket,
   academy,
   internetProvider,
+  businessDemoCompany,
 ]);
 
 export const demoOrganizationConnections: readonly OrganizationConnection[] = Object.freeze([

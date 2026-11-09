@@ -4,7 +4,11 @@ import { Link, Navigate } from 'react-router-dom';
 import { Badge } from '../../shared/components/ui/Badge';
 import { Card } from '../../shared/components/ui/Card';
 import { routes } from '../../shared/config/routes';
-import type { SubscriptionPlan } from './domain/models';
+import type { MainCompanyMembershipRequest, SubscriptionPlan } from './domain/models';
+import {
+  getMembershipCapacity,
+  type MembershipOperationFailureReason,
+} from './domain/membershipRequests';
 import {
   getDemoCompanies,
   getDirectCompanyConnections,
@@ -14,7 +18,7 @@ import { DemoShell } from './DemoPages';
 import { getConsumerPlanPresentations } from './planPresentation';
 import { useDemoScenario } from './useDemoScenario';
 import { useDemoMembershipRequests } from './useDemoMembershipRequests';
-import { getPendingMainCompanyRequest } from './membershipRequestSelectors';
+import { getOpenMembershipRequestForOrganization } from './membershipRequestSelectors';
 
 const planNames: Readonly<Record<SubscriptionPlan, string>> = {
   FREE: 'Gratuito',
@@ -25,9 +29,22 @@ const planNames: Readonly<Record<SubscriptionPlan, string>> = {
 const requestErrorMessages = {
   NOT_CONSUMER: 'Somente o cenário demonstrativo de Consumidor pode enviar uma solicitação.',
   ORGANIZATION_NOT_FOUND: 'A empresa selecionada não foi encontrada no catálogo.',
-  PENDING_REQUEST_EXISTS: 'Já existe uma solicitação pendente para esta identidade.',
+  PROFILE_NOT_FOUND: 'O perfil demonstrativo do Consumidor não foi encontrado.',
+  PROFILE_IDENTITY_MISMATCH: 'O perfil não corresponde à identidade do Consumidor.',
+  INVALID_PROFILE: 'Confira os dados demonstrativos antes de enviar a solicitação.',
+  OPEN_REQUEST_EXISTS: 'Já existe uma solicitação aberta para esta empresa.',
   ALREADY_AFFILIATED: 'A identidade já possui vínculo com essa organização.',
-} as const;
+  CAPACITY_REACHED: 'A capacidade do plano para empresas principais foi atingida.',
+  REQUEST_NOT_FOUND: 'A solicitação não foi encontrada.',
+  REQUEST_NOT_PENDING: 'A solicitação não está mais pendente.',
+  REQUEST_NOT_RETURNED: 'A solicitação não está aguardando correção.',
+  UNAUTHORIZED_ORGANIZATION: 'Esta identidade não pode analisar solicitações da organização.',
+  ORGANIZATION_MISMATCH: 'A solicitação pertence a outra organização.',
+  RETURN_REASON_REQUIRED: 'Informe o motivo do retorno.',
+  RETURN_REASON_TOO_SHORT: 'O motivo deve ter pelo menos 10 caracteres.',
+  RETURN_REASON_TOO_LONG: 'O motivo deve ter no máximo 500 caracteres.',
+  COMMAND_ID_CONFLICT: 'O comando já foi utilizado em outra operação.',
+} satisfies Record<MembershipOperationFailureReason, string>;
 
 function CompanyCard({
   company,
@@ -99,21 +116,23 @@ function CompanyCard({
 function CompanyConditionsDialog({
   company,
   currentPlan,
-  pendingRequest,
+  openRequest,
+  canSubmit,
   requestError,
   onSubmitRequest,
   onClose,
 }: {
   company: DemoCompany;
   currentPlan: SubscriptionPlan;
-  pendingRequest: ReturnType<typeof getPendingMainCompanyRequest>;
+  openRequest: MainCompanyMembershipRequest | undefined;
+  canSubmit: boolean;
   requestError: string | null;
   onSubmitRequest: () => void;
   onClose: () => void;
 }) {
   const connectedCompanies = getDirectCompanyConnections(company.id);
   const planPresentations = getConsumerPlanPresentations();
-  const companyRequest = pendingRequest?.organizationId === company.id ? pendingRequest : undefined;
+  const companyRequest = openRequest?.organizationId === company.id ? openRequest : undefined;
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
@@ -233,13 +252,11 @@ function CompanyConditionsDialog({
           )}
           {companyRequest ? (
             <p className="company-request-status" role="status">
-              Aguardando aprovação da empresa. Nenhum vínculo foi ativado.
+              {companyRequest.status === 'RETURNED'
+                ? 'Esta solicitação retornou para correção. Acompanhe os detalhes em Minhas solicitações.'
+                : 'Aguardando aprovação da empresa. Nenhum vínculo foi ativado.'}
             </p>
-          ) : pendingRequest ? (
-            <p className="company-request-status" role="status">
-              Já há uma solicitação pendente para outra empresa; não é possível enviar uma nova.
-            </p>
-          ) : (
+          ) : canSubmit ? (
             <button
               className="ui-button ui-button--primary company-request-submit"
               onClick={onSubmitRequest}
@@ -247,6 +264,10 @@ function CompanyConditionsDialog({
             >
               Enviar solicitação demonstrativa
             </button>
+          ) : (
+            <p className="company-request-status" role="status">
+              A capacidade de empresas principais deste plano foi atingida.
+            </p>
           )}
         </div>
       </div>
@@ -256,7 +277,7 @@ function CompanyConditionsDialog({
 
 export function CompaniesPage() {
   const { activeScenario } = useDemoScenario();
-  const { pendingRequests, submitRequest } = useDemoMembershipRequests();
+  const { state, submitRequest } = useDemoMembershipRequests();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
   const scenario =
@@ -271,9 +292,10 @@ export function CompaniesPage() {
 
   const consumerScenario = scenario;
   const currentPlan = consumerScenario.session.subscriptionPlan;
-  const pendingRequest = getPendingMainCompanyRequest(
-    pendingRequests,
+  const capacity = getMembershipCapacity(
+    state,
     consumerScenario.session.personIdentity.id,
+    currentPlan,
   );
   const selectedCompany = selectedCompanyId
     ? getDemoCompanies().find((company) => company.id === selectedCompanyId)
@@ -316,7 +338,12 @@ export function CompaniesPage() {
         <CompanyConditionsDialog
           company={selectedCompany}
           currentPlan={currentPlan}
-          pendingRequest={pendingRequest}
+          openRequest={getOpenMembershipRequestForOrganization(
+            state,
+            consumerScenario.session.personIdentity.id,
+            selectedCompany.id,
+          )}
+          canSubmit={capacity.available > 0}
           requestError={requestError}
           onSubmitRequest={() => handleRequest(selectedCompany)}
           onClose={() => {

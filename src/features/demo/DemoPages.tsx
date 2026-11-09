@@ -19,6 +19,8 @@ import { Card } from '../../shared/components/ui/Card';
 import { demoCampaigns, type CampaignStatus } from './demoData';
 import { getDemoCompanies } from './mocks/companyNetwork';
 import type { DemoScenarioContext } from './mocks/demoScenarios';
+import { useDemoMembershipRequests } from './useDemoMembershipRequests';
+import { useDemoScenario } from './useDemoScenario';
 
 const consumerNavigation = [
   [routes.demoConsumer, 'Visão geral', LayoutDashboard],
@@ -30,6 +32,7 @@ const consumerNavigation = [
 
 const businessNavigation = [
   [routes.demoBusiness, 'Visão geral', LayoutDashboard],
+  [routes.demoBusinessRequests, 'Solicitações', ClipboardList],
   [routes.demoCampaigns, 'Campanhas', Megaphone],
   [routes.demoPartners, 'Parcerias', Network],
 ] as const;
@@ -43,6 +46,16 @@ type DemoShellProps = {
 
 export function DemoShell({ business, children, title, subtitle }: DemoShellProps) {
   const links = business ? businessNavigation : consumerNavigation;
+  const { activeScenario } = useDemoScenario();
+  const { state } = useDemoMembershipRequests();
+  const pendingRequestCount =
+    business && activeScenario?.context === 'BUSINESS'
+      ? state.requests.filter(
+          (request) =>
+            request.organizationId === activeScenario.organization.id &&
+            request.status === 'PENDING',
+        ).length
+      : 0;
 
   return (
     <main className="app-layout">
@@ -58,6 +71,11 @@ export function DemoShell({ business, children, title, subtitle }: DemoShellProp
             >
               <Icon size={19} aria-hidden="true" />
               {label}
+              {url === routes.demoBusinessRequests && pendingRequestCount > 0 && (
+                <span className="sidebar-count" aria-label={`${pendingRequestCount} pendentes`}>
+                  {pendingRequestCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
