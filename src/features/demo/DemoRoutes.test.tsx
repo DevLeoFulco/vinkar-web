@@ -209,8 +209,182 @@ describe('isolamento e navegação da demonstração', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      within(internetProviderCard as HTMLElement).queryByRole('button'),
+      within(internetProviderCard as HTMLElement).queryByRole('button', {
+        name: /empresas conectadas/,
+      }),
     ).not.toBeInTheDocument();
+  });
+
+  it('exibe as condições em um modal acessível sem expandir os cards', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    const trigger = screen.getAllByRole('button', { name: 'Conhecer condições' })[0];
+    await user.click(trigger);
+
+    const dialog = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
+    expect(dialog).toBeInTheDocument();
+    expect(document.activeElement).toHaveAttribute('aria-label', 'Fechar condições');
+    expect(screen.getAllByRole('article')).toHaveLength(4);
+    await user.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toHaveTextContent('Enviar solicitação demonstrativa');
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('apresenta conexões e carências dos planos sem iniciar a carência', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    await user.click(screen.getAllByRole('button', { name: 'Conhecer condições' })[0]);
+    const conditions = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
+
+    expect(
+      within(conditions).getByText((_, element) => {
+        return element?.textContent === 'Plano demonstrativo atual: Gratuito (FREE).';
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(conditions).getByText('Carência de 30 dias corridos após a ativação.'),
+    ).toBeInTheDocument();
+    expect(
+      within(conditions).getByText('Carência de 15 dias corridos após a ativação.'),
+    ).toBeInTheDocument();
+    expect(within(conditions).getByText('Saída imediata da rede principal.')).toBeInTheDocument();
+    expect(
+      within(conditions).getByText(/começa somente depois da aprovação da empresa e da ativação/),
+    ).toBeInTheDocument();
+    expect(
+      within(conditions).getByText(/solicitação pendente não inicia esse prazo/),
+    ).toBeInTheDocument();
+    expect(within(conditions).getByText('Academia Horizonte Demo')).toBeInTheDocument();
+    expect(within(conditions).queryByText(/data de saída/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
+  });
+
+  it('permite solicitar adesão a empresa sem conexões e mantém o estado somente pendente', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    const providerCard = screen
+      .getByRole('heading', { name: 'Provedor Nuvem Azul Demo' })
+      .closest('article');
+    expect(providerCard).not.toBeNull();
+    const provider = within(providerCard as HTMLElement);
+    await user.click(provider.getByRole('button', { name: 'Conhecer condições' }));
+    const dialog = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
+
+    expect(
+      within(dialog).getByText(/não tem conexões diretas.*não impede o envio/i),
+    ).toBeInTheDocument();
+    const requestButton = within(dialog).getByRole('button', {
+      name: 'Enviar solicitação demonstrativa',
+    });
+    expect(requestButton).toBeEnabled();
+    await user.click(requestButton);
+
+    expect(within(dialog).getByRole('status')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('Aguardando aprovação da empresa. Nenhum vínculo foi ativado.'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole('button', { name: 'Enviar solicitação demonstrativa' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Fechar condições' }));
+    const secondCompany = screen
+      .getByRole('heading', { name: 'Academia Horizonte Demo' })
+      .closest('article');
+    expect(secondCompany).not.toBeNull();
+    const secondCompanyPanel = within(secondCompany as HTMLElement);
+    await user.click(secondCompanyPanel.getByRole('button', { name: 'Conhecer condições' }));
+    const secondDialog = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
+    expect(
+      within(secondDialog).getByText(/já há uma solicitação pendente para outra empresa/i),
+    ).toBeInTheDocument();
+    expect(
+      within(secondDialog).queryByRole('button', {
+        name: 'Enviar solicitação demonstrativa',
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+  });
+
+  it('mantém a solicitação associada ao Consumidor durante navegação interna', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/empresas', { demoContext: 'CONSUMER' });
+
+    const companyCard = screen
+      .getByRole('heading', { name: 'Barbearia Ponto Zero Demo' })
+      .closest('article');
+    expect(companyCard).not.toBeNull();
+    const company = within(companyCard as HTMLElement);
+    await user.click(company.getByRole('button', { name: 'Conhecer condições' }));
+    const dialog = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Enviar solicitação demonstrativa' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Fechar condições' }));
+
+    await user.click(screen.getByRole('link', { name: 'Minhas solicitações' }));
+    expect(screen.getByRole('heading', { name: 'Minhas solicitações' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Barbearia Ponto Zero Demo' })).toBeInTheDocument();
+    expect(screen.getByText('Aguardando aprovação')).toBeInTheDocument();
+    expect(screen.getByText(/não ativa um vínculo/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Empresas' }));
+    const revisitedCompany = screen
+      .getByRole('heading', { name: 'Barbearia Ponto Zero Demo' })
+      .closest('article');
+    expect(revisitedCompany).not.toBeNull();
+    await user.click(
+      within(revisitedCompany as HTMLElement).getByRole('button', {
+        name: 'Conhecer condições',
+      }),
+    );
+    const revisitedDialog = screen.getByRole('dialog', { name: 'Condições demonstrativas' });
+    expect(within(revisitedDialog).getByRole('status')).toBeInTheDocument();
+    expect(
+      within(revisitedDialog).getByText(
+        'Aguardando aprovação da empresa. Nenhum vínculo foi ativado.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Cenário ativo: Consumidor')).toBeInTheDocument();
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+  });
+
+  it('apresenta estado vazio na área de solicitações quando ainda não há pedidos pendentes', () => {
+    renderRoute('/demo/solicitacoes', { demoContext: 'CONSUMER' });
+
+    expect(screen.getByRole('heading', { name: 'Minhas solicitações' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Você ainda não possui solicitações pendentes neste cenário.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Conhecer empresas' })).toHaveAttribute(
+      'href',
+      '/demo/empresas',
+    );
+    expect(screen.getByRole('link', { name: 'Minhas solicitações' })).toHaveAttribute(
+      'href',
+      '/demo/solicitacoes',
+    );
+  });
+
+  it('protege o acesso direto às solicitações sem o contexto Consumidor', () => {
+    renderRoute('/demo/solicitacoes');
+
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('Consumidor')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Minhas solicitações' })).not.toBeInTheDocument();
   });
 
   it('protege o catálogo contra acesso direto sem o contexto Consumidor', () => {

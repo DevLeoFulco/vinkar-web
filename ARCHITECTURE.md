@@ -45,6 +45,12 @@ Essas durações são premissas técnicas temporárias para a demonstração, su
 
 O catálogo determinístico dos cenários demonstrativos fica em `src/features/demo/mocks/demoScenarios.ts`, separado dos mocks de campanhas. Ele define uma sessão de Consumidor com plano FREE, uma Empresa com identidade de administrador separada da organização e um Beneficiário com perfil pessoal próprio. `OrganizationAffiliation` representa somente o vínculo demonstrativo com uma organização; não implica elegibilidade, benefícios, pontos ou regras comerciais. Não há perfil pessoal `COMPANY`, nem plano empresarial definido.
 
+As conexões diretas entre organizações e o catálogo fictício de empresas ficam em `src/features/demo/mocks/companyNetwork.ts`. `OrganizationConnection` referencia duas organizações; consultas não inferem conexões transitivas nem ligam organizações a identidades pessoais. As listas de descoberta do Consumidor e de parcerias da Empresa compartilham esses mocks.
+
+As solicitações demonstrativas de adesão ficam em memória no `DemoMembershipRequestProvider`, associadas ao `PersonIdentityId`. O domínio valida perfil consumidor, organização existente, vínculo já ativo, solicitação pendente e instante UTC injetado. A solicitação `PENDING` não cria `OrganizationAffiliation`, não inicia carência e não persiste após recarregar a aplicação; aprovação e ativação não fazem parte deste fluxo.
+
+A rota protegida `/demo/solicitacoes` permite ao Consumidor acompanhar sua solicitação pendente na sessão demonstrativa. Ela não apresenta histórico concluído nem recomendações, pois o cenário não registra decisões nem possui regras de sugestão.
+
 A página informativa `/demo/planos?context=...` usa `getConsumerPlanPolicy` por meio de `src/features/demo/planPresentation.ts`, sem repetir os valores temporais nos componentes. As políticas são exibidas somente para Consumidor; Empresa e Beneficiário recebem aviso de que suas condições seguem indefinidas. A página não contrata nem ativa planos e preserva o contexto ao retornar à demonstração.
 
 ## Estilos e acessibilidade
@@ -53,7 +59,7 @@ A página informativa `/demo/planos?context=...` usa `getConsumerPlanPolicy` por
 
 Os estilos institucionais permanecem sob `.site`. Todos os seletores de apresentação da demonstração, incluindo suas media queries, ficam sob `.demo-app`; resets, estilos de `body`, controles e fontes são definidos globalmente uma única vez.
 
-Botões, badges e cards compartilhados são usados nos fluxos de campanha, benefícios, métricas e carteira. A navegação do demo informa seu estado expandido, permite fechar com Escape e mantém a sidebar navegável em telas pequenas. O modal de campanhas associa rótulos e descrição, move o foco ao abrir, contém a navegação por Tab, fecha com Escape e devolve o foco ao controle de origem.
+Botões, badges e cards compartilhados são usados nos fluxos de campanha, benefícios, métricas e carteira. A navegação do demo informa seu estado expandido, permite fechar com Escape e mantém a sidebar navegável em telas pequenas. Os modais de campanha e de condições de adesão associam rótulos, movem o foco ao abrir, contêm a navegação por Tab, fecham com Escape e devolvem o foco ao controle de origem.
 
 O cabeçalho institucional é sticky, o menu mobile expõe estado acessível, links usam âncoras internas e a rolagem respeita `prefers-reduced-motion`. Imagens secundárias usam lazy loading; a imagem principal recebe prioridade de carregamento.
 

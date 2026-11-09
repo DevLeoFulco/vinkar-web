@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   Building2,
   ArrowRight,
+  ClipboardList,
   Coins,
   Gift,
   LayoutDashboard,
@@ -22,6 +23,7 @@ import type { DemoScenarioContext } from './mocks/demoScenarios';
 const consumerNavigation = [
   [routes.demoConsumer, 'Visão geral', LayoutDashboard],
   [routes.demoCompanies, 'Empresas', Building2],
+  [routes.demoMembershipRequests, 'Minhas solicitações', ClipboardList],
   [routes.demoBenefits, 'Benefícios', Gift],
   [routes.demoWallet, 'Minha carteira', Wallet],
 ] as const;

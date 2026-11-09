@@ -5,6 +5,7 @@ import { CompaniesPage } from '../features/demo/CompaniesPage';
 import { DemoBeneficiaryPage } from '../features/demo/DemoBeneficiaryPage';
 import { DemoContextGate } from '../features/demo/DemoContextGate';
 import { DemoPlansPage } from '../features/demo/DemoPlansPage';
+import { MembershipRequestsPage } from '../features/demo/MembershipRequestsPage';
 import { DemoProfileSelectionPage } from '../features/demo/DemoProfileSelectionPage';
 import {
   BenefitsPage,
@@ -39,6 +40,14 @@ export function AppRoutes() {
           element={
             <DemoContextGate context="CONSUMER">
               <CompaniesPage />
+            </DemoContextGate>
+          }
+        />
+        <Route
+          path="solicitacoes"
+          element={
+            <DemoContextGate context="CONSUMER">
+              <MembershipRequestsPage />
             </DemoContextGate>
           }
         />

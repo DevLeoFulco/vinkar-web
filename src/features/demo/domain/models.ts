@@ -25,6 +25,16 @@ export type OrganizationConnection = Readonly<{
   organizationIds: readonly [OrganizationId, OrganizationId];
 }>;
 
+export type MembershipRequestId = `membership-request-demo-${string}`;
+
+export type MainCompanyMembershipRequest = Readonly<{
+  id: MembershipRequestId;
+  personIdentityId: PersonIdentityId;
+  organizationId: OrganizationId;
+  status: 'PENDING';
+  createdAtUtc: string;
+}>;
+
 export type OrganizationAdministration = Readonly<{
   organizationId: OrganizationId;
   role: OrganizationRole;

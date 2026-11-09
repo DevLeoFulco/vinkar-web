@@ -35,6 +35,7 @@ function getScenarioForPath(pathname: string, search: string, state: unknown): D
   const scenarioIdByPath: Readonly<Record<string, DemoScenarioId>> = {
     [routes.demoConsumer]: 'scenario-demo-consumer-free',
     [routes.demoCompanies]: 'scenario-demo-consumer-free',
+    [routes.demoMembershipRequests]: 'scenario-demo-consumer-free',
     [routes.demoBenefits]: 'scenario-demo-consumer-free',
     [routes.demoWallet]: 'scenario-demo-consumer-free',
     [routes.demoBusiness]: 'scenario-demo-business-admin',
@@ -46,6 +47,7 @@ function getScenarioForPath(pathname: string, search: string, state: unknown): D
   const contextByPath: Readonly<Record<string, string>> = {
     [routes.demoConsumer]: 'CONSUMER',
     [routes.demoCompanies]: 'CONSUMER',
+    [routes.demoMembershipRequests]: 'CONSUMER',
     [routes.demoBenefits]: 'CONSUMER',
     [routes.demoWallet]: 'CONSUMER',
     [routes.demoBusiness]: 'BUSINESS',

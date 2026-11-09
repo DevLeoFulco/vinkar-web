@@ -7,6 +7,7 @@ export const routes = {
   demoPlansBeneficiary: '/demo/planos?context=BENEFICIARY',
   demoConsumer: '/demo/consumidor',
   demoCompanies: '/demo/empresas',
+  demoMembershipRequests: '/demo/solicitacoes',
   demoBusiness: '/demo/empresa',
   demoBeneficiary: '/demo/beneficiario',
   demoCampaigns: '/demo/campanhas',
