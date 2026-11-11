@@ -115,6 +115,51 @@ describe('isolamento e navegação da demonstração', () => {
     expect(screen.getByText('Descubra empresas, conexões e benefícios.')).toBeInTheDocument();
     expect(screen.getByText('Conheça campanhas, redes e parcerias.')).toBeInTheDocument();
     expect(screen.getByText('Explore o conceito de benefícios corporativos.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Criar perfil demonstrativo' })).toHaveAttribute(
+      'href',
+      '/demo/cadastro/consumidor',
+    );
+  });
+
+  it('distingue login demonstrativo do cadastro de Consumidor', () => {
+    const login = renderRoute('/demo/login?context=CONSUMER');
+    expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Ainda não tem conta? Conheça o cadastro' }),
+    ).toHaveAttribute('href', '/demo/cadastro/consumidor');
+
+    login.unmount();
+    renderRoute('/demo/cadastro?context=CONSUMER');
+    expect(screen.getByRole('heading', { name: 'Cadastro de Consumidor' })).toBeInTheDocument();
+  });
+
+  it('mantém o cadastro separado do cenário estático e das solicitações de Membership', async () => {
+    const user = userEvent.setup();
+    renderRoute('/demo/cadastro/consumidor');
+
+    expect(document.querySelector('.demo-app')).not.toHaveAttribute('data-demo-scenario-id');
+    await user.type(screen.getByLabelText('Nome completo'), 'Ana');
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    await user.type(screen.getByLabelText('E-mail'), 'a@b.co');
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    await user.click(screen.getByRole('button', { name: 'Pular esta etapa' }));
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    await user.click(screen.getByRole('button', { name: 'Concluir cadastro demonstrativo' }));
+
+    expect(
+      screen.getByText(/abre o cenário fictício pré-configurado e não utiliza este cadastro/),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: /Descobrir empresas demonstrativas/ }));
+    expect(document.querySelector('.demo-app')).toHaveAttribute(
+      'data-demo-scenario-id',
+      'scenario-demo-consumer-free',
+    );
+
+    await user.click(screen.getByRole('link', { name: 'Minhas solicitações' }));
+    expect(screen.getByRole('heading', { name: 'Minhas solicitações' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Você ainda não possui solicitações neste cenário demonstrativo.'),
+    ).toBeInTheDocument();
   });
 
   it('lista empresas e preserva o cenário do Consumidor no catálogo', () => {

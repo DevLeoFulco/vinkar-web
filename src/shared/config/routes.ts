@@ -20,6 +20,7 @@ export const routes = {
   demoLoginBusiness: '/demo/login?context=BUSINESS',
   demoLoginBeneficiary: '/demo/login?context=BENEFICIARY',
   demoSignUp: '/demo/cadastro',
+  demoConsumerRegistration: '/demo/cadastro/consumidor',
 } as const;
 
 export const landingSections = {

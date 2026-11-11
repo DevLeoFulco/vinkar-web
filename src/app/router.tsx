@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { DemoLayout } from './layouts/DemoLayout';
 import { CampaignsPage } from '../features/demo/CampaignsPage';
 import { CompaniesPage } from '../features/demo/CompaniesPage';
+import { ConsumerRegistrationPage } from '../features/demo/ConsumerRegistrationPage';
 import { DemoBeneficiaryPage } from '../features/demo/DemoBeneficiaryPage';
 import { DemoContextGate } from '../features/demo/DemoContextGate';
 import { DemoPlansPage } from '../features/demo/DemoPlansPage';
@@ -110,6 +111,7 @@ export function AppRoutes() {
         />
         <Route path="login" element={<SignInPage mode="login" />} />
         <Route path="cadastro" element={<SignInPage mode="cadastro" />} />
+        <Route path="cadastro/consumidor" element={<ConsumerRegistrationPage />} />
         <Route path="*" element={<DemoNotFoundPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

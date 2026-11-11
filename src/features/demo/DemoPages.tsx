@@ -504,6 +504,9 @@ export function SignInPage({ mode }: { mode: 'login' | 'cadastro' }) {
   if (!selectedContext) {
     return <Navigate to={routes.demo} replace />;
   }
+  if (mode === 'cadastro' && selectedContext === 'CONSUMER') {
+    return <Navigate to={routes.demoConsumerRegistration} replace />;
+  }
 
   const contextDetails = {
     CONSUMER: {
@@ -527,7 +530,9 @@ export function SignInPage({ mode }: { mode: 'login' | 'cadastro' }) {
 
   const otherModePath =
     mode === 'login'
-      ? `${routes.demoSignUp}?context=${selectedContext}`
+      ? selectedContext === 'CONSUMER'
+        ? routes.demoConsumerRegistration
+        : `${routes.demoSignUp}?context=${selectedContext}`
       : `${routes.demoLogin}?context=${selectedContext}`;
 
   return (

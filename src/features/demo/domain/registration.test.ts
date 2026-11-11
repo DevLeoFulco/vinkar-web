@@ -30,6 +30,7 @@ import type {
 } from './registrationModels';
 import { getConsumerNetworkEligibility } from './networkEligibility';
 import { demoCompanies, demoOrganizationConnections } from '../mocks/companyNetwork';
+import { getDemoScenario } from '../mocks/demoScenarios';
 
 const now = new Date('2026-11-09T12:00:00.000Z');
 const otherPersonId = 'person-demo-registration-002' as PersonIdentityId;
@@ -144,6 +145,173 @@ describe('fundação cadastral e regras de identidade', () => {
       success: false,
       reason: 'DUPLICATE_ID',
     });
+  });
+
+  it('conclui identidade e perfil CONSUMER antes de registrar qualquer estado', () => {
+    const repository = new InMemoryPersonIdentityRepository();
+    const result = repository.registerConsumer({
+      identity: personInput(),
+      profileId: 'personal-profile-demo-onboarding-001',
+      profileData: {
+        preferences: {
+          interestCategories: ['FOOD'],
+          declaredFrequency: 'MONTHLY',
+          declaredSpendRange: '500_TO_1500',
+          preferredBenefitTypes: ['DISCOUNT'],
+          personalizationEnabled: true,
+          communicationChannels: ['EMAIL'],
+        },
+        declaredConsumption: {
+          source: 'DECLARED',
+          frequency: 'MONTHLY',
+          spendRange: '500_TO_1500',
+        },
+      },
+    });
+
+    expect(result).toMatchObject({
+      success: true,
+      value: {
+        identity: {
+          registrationStatus: 'ACTIVE',
+          id: personInput().id,
+        },
+        profile: {
+          personIdentityId: personInput().id,
+          type: 'CONSUMER',
+          status: 'ACTIVE',
+        },
+        profileData: {
+          preferences: {
+            interestCategories: ['FOOD'],
+            declaredFrequency: 'MONTHLY',
+            declaredSpendRange: '500_TO_1500',
+            preferredBenefitTypes: ['DISCOUNT'],
+            personalizationEnabled: true,
+            communicationChannels: ['EMAIL'],
+          },
+          declaredConsumption: {
+            source: 'DECLARED',
+            frequency: 'MONTHLY',
+            spendRange: '500_TO_1500',
+          },
+        },
+      },
+    });
+    expect(repository.findById(personInput().id)).toBe(
+      result.success ? result.value.identity : undefined,
+    );
+  });
+
+  it('não registra identidade parcial quando dados são inválidos ou duplicados', () => {
+    const repository = new InMemoryPersonIdentityRepository();
+    const invalid = repository.registerConsumer({
+      identity: { ...personInput(), contacts: { email: 'inválido' } },
+      profileId: 'personal-profile-demo-onboarding-invalid',
+    });
+    expect(invalid).toEqual({ success: false, reason: 'INVALID_EMAIL' });
+    expect(repository.findById(personInput().id)).toBeUndefined();
+
+    const registered = repository.registerConsumer({
+      identity: personInput(),
+      profileId: 'personal-profile-demo-onboarding-001',
+    });
+    const duplicate = repository.registerConsumer({
+      identity: personInput(),
+      profileId: 'personal-profile-demo-onboarding-002',
+    });
+
+    expect(registered.success).toBe(true);
+    expect(duplicate).toEqual({ success: false, reason: 'DUPLICATE_ID' });
+    expect(repository.findById(personInput().id)?.registrationStatus).toBe('ACTIVE');
+  });
+
+  it('recusa no repositório o código público já usado por um cenário demonstrativo', () => {
+    const repository = new InMemoryPersonIdentityRepository();
+    const scenario = getDemoScenario('scenario-demo-consumer-free');
+    if (!scenario || scenario.context !== 'CONSUMER') {
+      throw new Error('Cenário de Consumidor esperado para teste.');
+    }
+    const reserved = repository.create({
+      id: scenario.session.personIdentity.id,
+      publicRegistrationCode: scenario.session.personIdentity.publicRegistrationCode,
+      fullName: scenario.session.personIdentity.fullName,
+      contacts: scenario.session.personIdentity.contacts,
+      createdAt: new Date(scenario.session.personIdentity.createdAtUtc),
+    });
+    expect(reserved.success).toBe(true);
+
+    const collision = repository.registerConsumer({
+      identity: {
+        ...personInput(2),
+        publicRegistrationCode: scenario.session.personIdentity.publicRegistrationCode,
+      },
+      profileId: 'personal-profile-demo-onboarding-collision',
+    });
+    expect(collision).toEqual({ success: false, reason: 'DUPLICATE_PUBLIC_CODE' });
+    expect(repository.findById(personInput(2).id)).toBeUndefined();
+  });
+
+  it('atualiza preferências depois do cadastro sem trocar identidade ou perfil', () => {
+    const repository = new InMemoryPersonIdentityRepository();
+    const created = repository.registerConsumer({
+      identity: personInput(),
+      profileId: 'personal-profile-demo-onboarding-001',
+    });
+    if (!created.success) throw new Error('Falha ao criar perfil demonstrativo.');
+
+    const updated = repository.updateConsumerProfileData(created.value.identity.id, {
+      preferences: { interestCategories: ['HEALTH'] },
+      declaredConsumption: { source: 'DECLARED', spendRange: '100_TO_500' },
+    });
+
+    expect(updated).toMatchObject({
+      success: true,
+      value: {
+        identity: created.value.identity,
+        profile: created.value.profile,
+        profileData: {
+          preferences: { interestCategories: ['HEALTH'] },
+          declaredConsumption: {
+            source: 'DECLARED',
+            spendRange: '100_TO_500',
+          },
+        },
+      },
+    });
+    expect(
+      repository.updateConsumerProfileData(created.value.identity.id, undefined),
+    ).toMatchObject({
+      success: true,
+      value: { identity: created.value.identity, profile: created.value.profile },
+    });
+    expect(repository.updateConsumerProfileData('person-demo-missing', undefined)).toEqual({
+      success: false,
+      reason: 'IDENTITY_NOT_FOUND',
+    });
+  });
+
+  it('copia e congela preferências para não manter referências mutáveis do formulário', () => {
+    const repository = new InMemoryPersonIdentityRepository();
+    const interestCategories: ('FOOD' | 'HEALTH')[] = ['FOOD'];
+    const result = repository.registerConsumer({
+      identity: personInput(),
+      profileId: 'personal-profile-demo-onboarding-001',
+      profileData: { preferences: { interestCategories } },
+    });
+
+    interestCategories.push('HEALTH');
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.value.profileData?.preferences?.interestCategories).toEqual(['FOOD']);
+    expect(Object.isFrozen(result.value.profileData?.preferences?.interestCategories)).toBe(true);
+    expect(Object.isFrozen(result.value)).toBe(true);
+    expect(Object.isFrozen(result.value.identity)).toBe(true);
+    expect(Object.isFrozen(result.value.profile)).toBe(true);
+    expect(Reflect.set(result.value.identity, 'fullName', 'Alterado')).toBe(false);
+    expect(repository.findById(result.value.identity.id)?.fullName).toBe(
+      'Marina Pessoa Demonstrativa',
+    );
   });
 
   it.each([

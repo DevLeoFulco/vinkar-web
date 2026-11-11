@@ -14,6 +14,7 @@ type ProfileOption = Readonly<{
   description: string;
   destination: string;
   planDestination: string;
+  registrationDestination?: string;
   Icon: LucideIcon;
 }>;
 
@@ -23,6 +24,7 @@ const profileOptions: readonly ProfileOption[] = [
     description: 'Descubra empresas, conexões e benefícios.',
     destination: routes.demoLoginConsumer,
     planDestination: routes.demoPlansConsumer,
+    registrationDestination: routes.demoConsumerRegistration,
     Icon: UserRound,
   },
   {
@@ -60,26 +62,40 @@ export function DemoProfileSelectionPage() {
       </header>
 
       <div className="demo-profile-grid">
-        {profileOptions.map(({ context, description, destination, planDestination, Icon }) => {
-          const scenario = findScenario(context);
+        {profileOptions.map(
+          ({
+            context,
+            description,
+            destination,
+            planDestination,
+            registrationDestination,
+            Icon,
+          }) => {
+            const scenario = findScenario(context);
 
-          return (
-            <Card as="article" className="demo-profile-card" key={scenario.id}>
-              <span className={`demo-profile-icon demo-profile-icon--${context.toLowerCase()}`}>
-                <Icon size={25} aria-hidden="true" />
-              </span>
-              <h2>{scenario.title}</h2>
-              <p>{description}</p>
-              <Link className="ui-button ui-button--primary demo-profile-action" to={destination}>
-                Continuar como {scenario.title.toLowerCase()}
-                <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-              <Link className="demo-profile-plans-link" to={planDestination}>
-                Informações de planos
-              </Link>
-            </Card>
-          );
-        })}
+            return (
+              <Card as="article" className="demo-profile-card" key={scenario.id}>
+                <span className={`demo-profile-icon demo-profile-icon--${context.toLowerCase()}`}>
+                  <Icon size={25} aria-hidden="true" />
+                </span>
+                <h2>{scenario.title}</h2>
+                <p>{description}</p>
+                <Link className="ui-button ui-button--primary demo-profile-action" to={destination}>
+                  Continuar como {scenario.title.toLowerCase()}
+                  <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+                <Link className="demo-profile-plans-link" to={planDestination}>
+                  Informações de planos
+                </Link>
+                {registrationDestination && (
+                  <Link className="demo-profile-registration-link" to={registrationDestination}>
+                    Criar perfil demonstrativo
+                  </Link>
+                )}
+              </Card>
+            );
+          },
+        )}
       </div>
     </main>
   );

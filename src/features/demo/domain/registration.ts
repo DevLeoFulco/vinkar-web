@@ -12,6 +12,7 @@ import type {
   OrganizationRegistrationInput,
   OrganizationValidationDecision,
   OrganizationValidationStatus,
+  ConsumerProfileData,
   PersonalDataAccessGrant,
   PersonalDataAttribute,
   PersonalProfile,
@@ -63,6 +64,18 @@ export type RegistrationFailure =
 export type RegistrationResult<T> =
   Readonly<{ success: true; value: T }> | Readonly<{ success: false; reason: RegistrationFailure }>;
 
+export type ConsumerRegistration = Readonly<{
+  identity: PersonIdentity;
+  profile: PersonalProfile;
+  profileData?: ConsumerProfileData;
+}>;
+
+export type ConsumerRegistrationInput = Readonly<{
+  identity: PersonIdentityRegistrationInput;
+  profileId: PersonalProfile['id'];
+  profileData?: ConsumerProfileData;
+}>;
+
 function failure<T>(reason: RegistrationFailure): RegistrationResult<T> {
   return { success: false, reason };
 }
@@ -100,6 +113,25 @@ function validPublicCode(value: string): value is VinkarPublicCode {
   return /^VK-[A-Z0-9][A-Z0-9-]{2,36}$/.test(value);
 }
 
+export function validatePersonFullName(fullName: string): RegistrationFailure | null {
+  const normalized = fullName.trim().replace(/\s+/g, ' ');
+  return normalized.length < 3 || normalized.length > 120 ? 'INVALID_FULL_NAME' : null;
+}
+
+export function validatePersonContacts(
+  contacts: PersonIdentityRegistrationInput['contacts'],
+): RegistrationFailure | null {
+  const email = contacts.email.trim().toLowerCase();
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return 'INVALID_EMAIL';
+  }
+  const phone = contacts.phone?.trim();
+  if (phone !== undefined && phone !== '' && !/^\+?[0-9 ()-]{7,24}$/.test(phone)) {
+    return 'INVALID_PHONE';
+  }
+  return null;
+}
+
 function normalizeAndValidatePerson(input: {
   id: PersonIdentityId;
   publicRegistrationCode: string;
@@ -122,17 +154,16 @@ function normalizeAndValidatePerson(input: {
   if (!validPublicCode(publicRegistrationCode)) {
     return 'INVALID_PUBLIC_CODE';
   }
+  const fullNameFailure = validatePersonFullName(input.fullName);
+  if (fullNameFailure) {
+    return fullNameFailure;
+  }
   const fullName = input.fullName.trim().replace(/\s+/g, ' ');
-  if (fullName.length < 3 || fullName.length > 120) {
-    return 'INVALID_FULL_NAME';
-  }
   const email = input.contacts.email.trim().toLowerCase();
-  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return 'INVALID_EMAIL';
-  }
   const phone = input.contacts.phone?.trim();
-  if (phone !== undefined && phone !== '' && !/^\+?[0-9 ()-]{7,24}$/.test(phone)) {
-    return 'INVALID_PHONE';
+  const contactsFailure = validatePersonContacts(input.contacts);
+  if (contactsFailure) {
+    return contactsFailure;
   }
   const nationalTaxIdentifier = input.nationalTaxIdentifier
     ? normalizeTaxIdentifier(input.nationalTaxIdentifier)
@@ -209,6 +240,11 @@ export function updatePersonIdentity(
 export interface PersonIdentityRepository {
   findById(id: PersonIdentityId): PersonIdentity | undefined;
   create(input: PersonIdentityRegistrationInput): RegistrationResult<PersonIdentity>;
+  registerConsumer(input: ConsumerRegistrationInput): RegistrationResult<ConsumerRegistration>;
+  updateConsumerProfileData(
+    personIdentityId: PersonIdentityId,
+    profileData: ConsumerProfileData | undefined,
+  ): RegistrationResult<ConsumerRegistration>;
   update(
     id: PersonIdentityId,
     changes: PersonIdentityUpdate,
@@ -218,6 +254,7 @@ export interface PersonIdentityRepository {
 
 export class InMemoryPersonIdentityRepository implements PersonIdentityRepository {
   private readonly identities = new Map<PersonIdentityId, PersonIdentity>();
+  private readonly consumerRegistrations = new Map<PersonIdentityId, ConsumerRegistration>();
 
   findById(id: PersonIdentityId): PersonIdentity | undefined {
     return this.identities.get(id);
@@ -234,6 +271,74 @@ export class InMemoryPersonIdentityRepository implements PersonIdentityRepositor
     }
     this.identities.set(result.value.id, result.value);
     return result;
+  }
+
+  registerConsumer(input: ConsumerRegistrationInput): RegistrationResult<ConsumerRegistration> {
+    const draft = createPersonIdentity(input.identity);
+    if (!draft.success) {
+      return draft;
+    }
+    const submitted = transitionPersonRegistration(
+      draft.value,
+      'SUBMITTED',
+      input.identity.createdAt,
+    );
+    if (!submitted.success) {
+      return submitted;
+    }
+    const active = transitionPersonRegistration(
+      submitted.value,
+      'ACTIVE',
+      input.identity.createdAt,
+    );
+    if (!active.success) {
+      return active;
+    }
+    const profile = activatePersonalProfile(
+      {
+        id: input.profileId,
+        personIdentityId: active.value.id,
+        type: 'CONSUMER',
+        status: 'DRAFT',
+      },
+      active.value,
+      [],
+    );
+    if (!profile.success) {
+      return profile;
+    }
+    const duplicate = this.findDuplicate(active.value);
+    if (duplicate) {
+      return failure(duplicate);
+    }
+
+    const profileData = snapshotConsumerProfileData(input.profileData);
+    const registration = Object.freeze({
+      identity: active.value,
+      profile: profile.value,
+      ...(profileData ? { profileData } : {}),
+    });
+    this.identities.set(active.value.id, active.value);
+    this.consumerRegistrations.set(active.value.id, registration);
+    return { success: true, value: registration };
+  }
+
+  updateConsumerProfileData(
+    personIdentityId: PersonIdentityId,
+    profileData: ConsumerProfileData | undefined,
+  ): RegistrationResult<ConsumerRegistration> {
+    const current = this.consumerRegistrations.get(personIdentityId);
+    if (!current) {
+      return failure('IDENTITY_NOT_FOUND');
+    }
+    const snapshot = snapshotConsumerProfileData(profileData);
+    const updated = Object.freeze({
+      identity: current.identity,
+      profile: current.profile,
+      ...(snapshot ? { profileData: snapshot } : {}),
+    });
+    this.consumerRegistrations.set(personIdentityId, updated);
+    return { success: true, value: updated };
   }
 
   update(
@@ -285,6 +390,39 @@ export class InMemoryPersonIdentityRepository implements PersonIdentityRepositor
     }
     return null;
   }
+}
+
+function snapshotConsumerProfileData(
+  profileData: ConsumerProfileData | undefined,
+): ConsumerProfileData | undefined {
+  if (!profileData) {
+    return undefined;
+  }
+  const preferences = profileData.preferences;
+  return Object.freeze({
+    ...(preferences
+      ? {
+          preferences: Object.freeze({
+            ...preferences,
+            ...(preferences.interestCategories
+              ? { interestCategories: Object.freeze([...preferences.interestCategories]) }
+              : {}),
+            ...(preferences.preferredBenefitTypes
+              ? { preferredBenefitTypes: Object.freeze([...preferences.preferredBenefitTypes]) }
+              : {}),
+            ...(preferences.communicationChannels
+              ? { communicationChannels: Object.freeze([...preferences.communicationChannels]) }
+              : {}),
+          }),
+        }
+      : {}),
+    ...(profileData.declaredConsumption
+      ? { declaredConsumption: Object.freeze({ ...profileData.declaredConsumption }) }
+      : {}),
+    ...(profileData.observedConsumption
+      ? { observedConsumption: Object.freeze({ ...profileData.observedConsumption }) }
+      : {}),
+  });
 }
 
 function taxIdentifierKey(identifier: NationalTaxIdentifier): string {

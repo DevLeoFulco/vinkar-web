@@ -1576,6 +1576,272 @@
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
+.demo-app .demo-profile-registration-link {
+  margin: 0.65rem auto 0;
+  color: var(--color-navy-700);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.demo-app .consumer-onboarding {
+  width: min(100% - 2.5rem, 820px);
+  flex: 1;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0;
+}
+.demo-app .consumer-onboarding-heading {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+.demo-app .consumer-onboarding-heading h1,
+.demo-app .consumer-registration-success h1 {
+  margin: 0;
+  color: var(--color-navy-900);
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  letter-spacing: -0.035em;
+}
+.demo-app .consumer-onboarding-heading > p,
+.demo-app .consumer-registration-success > p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--color-muted);
+}
+.demo-app .consumer-onboarding-icon {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  border-radius: 1rem;
+  color: var(--color-purple-700);
+  background: var(--color-purple-100);
+}
+.demo-app .consumer-onboarding-icon--success {
+  color: var(--color-cyan-700);
+  background: var(--color-cyan-100);
+}
+.demo-app .consumer-onboarding-card {
+  display: grid;
+  gap: 1.5rem;
+  padding: clamp(1.1rem, 4vw, 2rem);
+}
+.demo-app .consumer-onboarding-progress {
+  display: grid;
+  gap: 0.8rem;
+}
+.demo-app .consumer-onboarding-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}
+.demo-app .consumer-onboarding-progress-label strong {
+  color: var(--color-navy-900);
+}
+.demo-app .consumer-onboarding-progress progress {
+  width: 100%;
+  height: 0.55rem;
+  accent-color: var(--color-purple-700);
+}
+.demo-app .consumer-onboarding-progress ol {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.demo-app .consumer-onboarding-progress li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+.demo-app .consumer-onboarding-progress li > span:first-child {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface-soft);
+}
+.demo-app .consumer-onboarding-progress li[aria-current='step'] {
+  color: var(--color-purple-700);
+  font-weight: 700;
+}
+.demo-app .consumer-onboarding-progress li[aria-current='step'] > span:first-child {
+  border-color: var(--color-purple-700);
+  color: var(--color-surface);
+  background: var(--color-purple-700);
+}
+.demo-app .consumer-onboarding-card form,
+.demo-app .consumer-onboarding-card form section {
+  display: grid;
+  gap: 1rem;
+}
+.demo-app .consumer-onboarding-card form section h2 {
+  margin: 0;
+  color: var(--color-navy-900);
+  font-size: 1.35rem;
+}
+.demo-app .consumer-onboarding-card form section > p {
+  margin: 0;
+  color: var(--color-muted);
+}
+.demo-app .consumer-onboarding-card form section > label:not(.consumer-onboarding-choice) {
+  margin: 0;
+  color: var(--color-navy-700);
+  font-size: 0.9rem;
+}
+.demo-app .consumer-onboarding-card input:not([type='checkbox']),
+.demo-app .consumer-onboarding-card select {
+  margin-top: 0.45rem;
+}
+.demo-app .consumer-onboarding-card input[aria-invalid='true'] {
+  border-color: var(--color-coral-700);
+}
+.demo-app .consumer-onboarding-help {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+.demo-app .consumer-onboarding-error {
+  margin: -0.65rem 0 0;
+  color: var(--color-coral-700);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.demo-app .consumer-onboarding-card fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.demo-app .consumer-onboarding-card legend {
+  margin-bottom: 0.6rem;
+  color: var(--color-navy-700);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.demo-app .consumer-onboarding-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.demo-app .consumer-onboarding-card .consumer-onboarding-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  color: var(--color-navy-700);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.demo-app .consumer-onboarding-choice input[type='checkbox'] {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  margin: 0.1rem 0 0;
+  accent-color: var(--color-purple-700);
+}
+.demo-app .consumer-onboarding-privacy-item,
+.demo-app .consumer-onboarding-next-step {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-soft);
+}
+.demo-app .consumer-onboarding-privacy-item p {
+  margin: 0.45rem 0 0;
+  color: var(--color-muted);
+}
+.demo-app .consumer-onboarding-disclaimer {
+  padding: 0.9rem;
+  border-left: 3px solid var(--color-cyan-600);
+  background: var(--color-cyan-100);
+  font-size: 0.85rem;
+}
+.demo-app .consumer-onboarding-review {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+}
+.demo-app .consumer-onboarding-review > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.35fr) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.4rem 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.demo-app .consumer-onboarding-review dt {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.demo-app .consumer-onboarding-review dd {
+  grid-column: 2;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.demo-app .consumer-onboarding-review button {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  padding: 0;
+  border: 0;
+  color: var(--color-purple-700);
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.demo-app .consumer-onboarding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+.demo-app .consumer-onboarding-continue {
+  min-width: 11rem;
+}
+.demo-app .consumer-onboarding-back-link {
+  display: block;
+  width: fit-content;
+  margin: 1.1rem auto 0;
+  color: var(--color-purple-700);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.demo-app .consumer-registration-success {
+  justify-items: center;
+  text-align: center;
+}
+.demo-app .consumer-registration-success .consumer-onboarding-next-step {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  color: var(--color-navy-700);
+}
+.demo-app .consumer-registration-success .ui-button {
+  justify-content: center;
+  width: 100%;
+}
 .demo-app .demo-plans-page {
   width: min(100% - 2.5rem, 1120px);
   flex: 1;
@@ -1879,5 +2145,33 @@
   }
   .demo-app .toolbar {
     flex-wrap: wrap;
+  }
+  .demo-app .consumer-onboarding {
+    width: min(100% - 2rem, 820px);
+    padding-block: 2rem;
+  }
+  .demo-app .consumer-onboarding-progress ol {
+    gap: 0.2rem;
+  }
+  .demo-app .consumer-onboarding-progress li {
+    flex-direction: column;
+    text-align: center;
+    font-size: 0.65rem;
+  }
+  .demo-app .consumer-onboarding-choice-grid {
+    grid-template-columns: 1fr;
+  }
+  .demo-app .consumer-onboarding-review > div {
+    grid-template-columns: 1fr auto;
+  }
+  .demo-app .consumer-onboarding-review dd {
+    grid-column: 1 / -1;
+  }
+  .demo-app .consumer-onboarding-review button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .demo-app .consumer-onboarding-actions > button {
+    flex: 1 1 100%;
   }
 }
