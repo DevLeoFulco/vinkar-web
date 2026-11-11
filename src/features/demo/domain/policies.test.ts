@@ -12,7 +12,12 @@ const DAY_IN_MILLISECONDS = 24 * HOUR_IN_MILLISECONDS;
 
 const personIdentity = {
   id: 'person-demo-001',
-  displayName: 'Pessoa demonstrativa',
+  publicRegistrationCode: 'VK-DEMO-PERSON-001',
+  fullName: 'Pessoa demonstrativa',
+  contacts: { email: 'person@example.test' },
+  registrationStatus: 'ACTIVE',
+  createdAtUtc: '2026-11-09T00:00:00.000Z',
+  updatedAtUtc: '2026-11-09T00:00:00.000Z',
 } as const satisfies DemoSession['personIdentity'];
 
 const organization = {

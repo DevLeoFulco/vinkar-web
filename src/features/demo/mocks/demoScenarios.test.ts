@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getConsumerPlanPolicy } from '../domain/policies';
+import { getDemoConsumerProfile } from './consumerProfiles';
 import { demoScenarios, getDemoScenario, getDemoScenariosByContext } from './demoScenarios';
 
 describe('catálogo de cenários demonstrativos', () => {
@@ -14,16 +15,50 @@ describe('catálogo de cenários demonstrativos', () => {
   it('usa identificadores de cenário e identidade estáveis e únicos', () => {
     const scenarioIds = demoScenarios.map((scenario) => scenario.id);
     const personIdentityIds = demoScenarios.map((scenario) => scenario.session.personIdentity.id);
+    const publicRegistrationCodes = demoScenarios.map(
+      (scenario) => scenario.session.personIdentity.publicRegistrationCode,
+    );
     const organizationIds = demoScenarios.flatMap((scenario) =>
       scenario.context === 'CONSUMER' ? [] : [scenario.organization.id],
     );
 
     expect(new Set(scenarioIds).size).toBe(scenarioIds.length);
     expect(new Set(personIdentityIds).size).toBe(personIdentityIds.length);
+    expect(new Set(publicRegistrationCodes).size).toBe(publicRegistrationCodes.length);
+    expect(
+      demoScenarios.every(
+        (scenario) =>
+          scenario.session.personIdentity.id !==
+          String(scenario.session.personIdentity.publicRegistrationCode),
+      ),
+    ).toBe(true);
     expect(new Set(organizationIds).size).toBe(organizationIds.length);
     expect(getDemoScenario('scenario-demo-consumer-free')).toBe(demoScenarios[0]);
     expect(getDemoScenario('scenario-demo-business-admin')).toBe(demoScenarios[1]);
     expect(getDemoScenario('scenario-demo-beneficiary')).toBe(demoScenarios[2]);
+  });
+
+  it('mantém identidades demonstrativas sem identificadores fiscais nacionais', () => {
+    expect(
+      demoScenarios.every(
+        (scenario) => scenario.session.personIdentity.nationalTaxIdentifier === undefined,
+      ),
+    ).toBe(true);
+  });
+
+  it('mantém o perfil de adesão de Consumidor coerente com a identidade demonstrativa', () => {
+    const scenario = getDemoScenario('scenario-demo-consumer-free');
+    if (scenario?.context !== 'CONSUMER') {
+      throw new Error('Cenário demonstrativo de Consumidor ausente.');
+    }
+    const profile = getDemoConsumerProfile(scenario.session.personIdentity.id);
+
+    expect(profile).toMatchObject({
+      publicRegistrationCode: scenario.session.personIdentity.publicRegistrationCode,
+      fullName: scenario.session.personIdentity.fullName,
+      email: scenario.session.personIdentity.contacts.email,
+      phone: scenario.session.personIdentity.contacts.phone,
+    });
   });
 
   it('mantém no máximo um perfil pessoal ativo e não modela empresa como perfil', () => {

@@ -1,5 +1,7 @@
 export type PersonIdentityId = `person-demo-${string}`;
 
+export type VinkarPublicCode = `VK-${string}`;
+
 export type OrganizationId = `organization-demo-${string}`;
 
 export type OrganizationConnectionId = `organization-connection-demo-${string}`;
@@ -10,9 +12,28 @@ export type OrganizationRole = 'ADMINISTRATOR';
 
 export type SubscriptionPlan = 'FREE' | 'PRO' | 'PREMIUM';
 
+export type RegistrationStatus =
+  'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'ACTIVE' | 'BLOCKED' | 'REJECTED';
+
+export type NationalTaxIdentifier = Readonly<{
+  countryCode: string;
+  value: string;
+}>;
+
+export type PersonContactDetails = Readonly<{
+  email: string;
+  phone?: string;
+}>;
+
 export type PersonIdentity = Readonly<{
   id: PersonIdentityId;
-  displayName: string;
+  publicRegistrationCode: VinkarPublicCode;
+  fullName: string;
+  nationalTaxIdentifier?: NationalTaxIdentifier;
+  contacts: PersonContactDetails;
+  registrationStatus: RegistrationStatus;
+  createdAtUtc: string;
+  updatedAtUtc: string;
 }>;
 
 export type Organization = Readonly<{

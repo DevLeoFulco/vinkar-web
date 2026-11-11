@@ -58,7 +58,10 @@ export function getConsumerNetworkEligibility(input: {
 }): ConsumerNetworkEligibility {
   const { personIdentityId, memberships, organizations, connections } = input;
   const organizationsById = new Map(
-    organizations.map((organization) => [organization.id, organization]),
+    organizations.map((organization) => [
+      organization.id,
+      Object.freeze({ id: organization.id, displayName: organization.displayName }),
+    ]),
   );
   const mainCompaniesById = new Map<OrganizationId, Organization>();
 

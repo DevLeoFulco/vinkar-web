@@ -67,17 +67,35 @@ export type DemoScenario = ConsumerDemoScenario | BusinessDemoScenario | Benefic
 
 const consumerIdentity = Object.freeze<PersonIdentity>({
   id: 'person-demo-consumer-001',
-  displayName: 'Consumidor demonstrativo',
+  publicRegistrationCode: 'VK-DEMO-0001',
+  fullName: 'Camila Nogueira Demonstrativa',
+  contacts: Object.freeze({
+    email: 'camila.nogueira@example.com',
+    phone: '11900000001',
+  }),
+  registrationStatus: 'ACTIVE',
+  createdAtUtc: '2026-11-09T00:00:00.000Z',
+  updatedAtUtc: '2026-11-09T00:00:00.000Z',
 });
 
 const businessAdministratorIdentity = Object.freeze<PersonIdentity>({
   id: 'person-demo-administrator-001',
-  displayName: 'Administrador demonstrativo',
+  publicRegistrationCode: 'VK-DEMO-PERSON-002',
+  fullName: 'Administrador demonstrativo',
+  contacts: Object.freeze({ email: 'administrator@example.test', phone: '+550000000002' }),
+  registrationStatus: 'ACTIVE',
+  createdAtUtc: '2026-11-09T00:00:00.000Z',
+  updatedAtUtc: '2026-11-09T00:00:00.000Z',
 });
 
 const beneficiaryIdentity = Object.freeze<PersonIdentity>({
   id: 'person-demo-beneficiary-001',
-  displayName: 'Beneficiário demonstrativo',
+  publicRegistrationCode: 'VK-DEMO-PERSON-003',
+  fullName: 'Beneficiário demonstrativo',
+  contacts: Object.freeze({ email: 'beneficiary@example.test', phone: '+550000000003' }),
+  registrationStatus: 'ACTIVE',
+  createdAtUtc: '2026-11-09T00:00:00.000Z',
+  updatedAtUtc: '2026-11-09T00:00:00.000Z',
 });
 
 const beneficiaryOrganization = Object.freeze<Organization>({
